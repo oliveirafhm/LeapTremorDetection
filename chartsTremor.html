@@ -1,3 +1,6 @@
+<!--
+@author Fábio Henrique M. Oliveira
+-->
 <!-- <!DOCTYPE html> -->
 <html lang="en">
 	<head>
@@ -20,22 +23,34 @@
 				width: 50%;
 				height: 50%;
 			}
+			#chartContainer{
+				float: left;
+				width: 45%;
+				height: 45%;				
+			}
 		</style>
-		<script type="text/javascript" src="leap.js"></script>
-		<script type="text/javascript" src="canvasjs.min.js"></script>		
+		<script type="text/javascript" src="leap.min.js"></script>
+		<script type="text/javascript" src="canvasjs.min.js"></script>
+		<script type="text/javascript" src="usefulFunctions.js"></script>
 	</head>
 	<body>
 
 		<canvas id="canvas" ></canvas>
 		<button id="connectButton" onclick="controller.connect()">
-			Connect controller
+			Connect
 		</button>
-		<button id="disconnectButton" onclick="controller.disconnect()">
-			Disconnect controller
+		<button id="resumeButton" onclick="resume()" disabled="disabled">
+			Resume
 		</button>
-		<div id="chartContainer" style="height: 300px; width:550px;"></div>
-		<textarea id="logTextArea" readonly="true">LOG:</textarea>														
-		
+		<button id="pauseButton" onclick="pause()" disabled="disabled">
+			Pause
+		</button>
+		<button id="disconnectButton" onclick="controller.disconnect()" disabled="disabled">
+			Disconnect
+		</button>
+		<div id="chartContainer"></div>
+		<textarea id="logTextArea" readonly="true">LOG:</textarea>																										
+
 		<script>
             // Get the canvas DOM element
             var canvas = document.getElementById('canvas');
@@ -70,70 +85,27 @@
             var firstTimestamp = 0;
             var currentTimestamp = 0;
             var lastTimestamp = 0;
+            // My frame id
             var frameId = 0;
-			
+
             // Qtd frames/second
             var frameRate = 60;
-            // time to wait between frames in microsecond (/1000000 = 0.01 seconds)
-            var framePause = (1/frameRate)*1000000;
-            
-            /*
-
-             The leapToScene function takes a position in leap space
-             and converts it to the space in the canvas.
-
-             It does this by using the interaction box, in order to
-             make sure that every part of the canvas is accesible
-             in the interaction area of the leap
-
-             */
-            function leapToScene(leapPos, frame) {
-
-                // Gets the interaction box of the current frame
-                var iBox = frame.interactionBox;
-
-                // Gets the left border and top border of the box
-                // In order to convert the position to the proper
-                // location for the canvas
-                var left = iBox.center[0] - iBox.size[0] / 2;
-                var top = iBox.center[1] + iBox.size[1] / 2;
-
-                // Takes our leap coordinates, and changes them so
-                // that the origin is in the top left corner
-                var x = leapPos[0] - left;
-                var y = leapPos[1] - top;
-
-                // Divides the position by the size of the box
-                // so that x and y values will range from 0 to 1
-                // as they lay within the interaction box
-                x /= iBox.size[0];
-                y /= iBox.size[1];
-
-                // Uses the height and width of the canvas to scale
-                // the x and y coordinates in a way that they
-                // take up the entire canvas
-                x *= width;
-                y *= height;
-
-                // Returns the values, making sure to negate the sign
-                // of the y coordinate, because the y basis in canvas
-                // points down instead of up
-                return [x, -y];
-
-            }
+            // Time to wait between frames in microsecond (/1000000 = 0.01 seconds)
+            var framePause = (1 / frameRate) * 1000000;
+            // Used to control the program loop (using a kind of timer)
+            var loopController;
 
             // Creates our Leap Controller
-            var controller = new Leap.Controller({enableGestures: false, frameEventName: 'deviceFrame'});
+            var controller = new Leap.Controller({
+                enableGestures : false,
+                frameEventName : 'deviceFrame'
+            });
             //console.log(controller.frame());
             // Initializes the chart
             initChart();
 
             // Tells the controller what to do every time it sees a frame
-            controller.on('frame', function(frame) {
-
-                // Assigning the data to the global frame object
-                //frame = data;
-
+            function onFrame(frame) {
                 //Clears the canvas so we are not drawing multiple frames
                 c.clearRect(0, 0, width, height);
 
@@ -143,28 +115,23 @@
 
                     // For each hand we define it
                     var hand = frame.hands[i];
-					// difference between time stamps
-                    var timeDifference = frame.timestamp - lastTimestamp;
-                                        
+
                     if (frameId == 0 && frame.valid) {
-                        logTextArea.value += '\n--- Updated every '+framePause/1000000 +' seconds ---\n\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp + '\nHand time visible: ' + hand.timeVisible + ' seconds';
-                        logTextArea.value += '\nTime: ' + currentTimestamp + ' seconds\n';
+                        logTextArea.value += '\n--- Updated every ' + framePause / 1000000 + ' seconds ---\n\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp + '\nHand time visible: ' + hand.timeVisible + ' seconds';
+                        logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
                         firstTimestamp = frame.timestamp;
-                        frameId = frame.id;
-                        timeDifference = 0;
+                        frameId += 1;
                         lastTimestamp = frame.timestamp;
-                    }
-                                        
-                    if (timeDifference > framePause) {
-                        currentTimestamp = (frame.timestamp - firstTimestamp)/1000000;
+                    } else {
+                        currentTimestamp = (frame.timestamp - firstTimestamp) / 1000000;
                         logTextArea.value += '\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp + '\nHand time visible: ' + hand.timeVisible + ' seconds';
-                        logTextArea.value += '\nTime: ' + currentTimestamp + ' seconds\n';
+                        logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
                         // To keep textarea scrolled to the bottom when updated
                         logTextArea.scrollTop = logTextArea.scrollHeight;
-                        
+
                         updateChart(hand);
 
-                        frameId = frame.id;
+                        frameId += 1;
                         lastTimestamp = frame.timestamp;
                     }
 
@@ -238,52 +205,83 @@
 
                 }
 
-            });
+            }
+
 
             controller.on('connect', function() {
-
-                logTextArea.value += '\n---Successfully connected---';
-
+                logTextArea.value += '\n---Successfully connected---\nCollecting data...';
+                // This function uses the time in miliseconds
+                loopController = setInterval(function() {
+                    onFrame(controller.frame());
+                }, (framePause / 1000));
+                document.getElementById("disconnectButton").disabled = false;
+                //document.getElementById("resumeButton").disabled = false;
+                document.getElementById("pauseButton").disabled = false;
+                document.getElementById("connectButton").disabled = true;
             });
 
             controller.on('disconnect', function() {
-
-                logTextArea.value += '\n---Disconnected---';
-
+            	clearInterval(loopController);
+                logTextArea.value += '\n---Disconnected---\nStopped!';
+                document.getElementById("disconnectButton").disabled = true;
+                document.getElementById("resumeButton").disabled = true;
+                document.getElementById("pauseButton").disabled = true;
+                document.getElementById("connectButton").disabled = true;
+                // To keep textarea scrolled to the bottom when updated
+                logTextArea.scrollTop = logTextArea.scrollHeight;
             });
+
+            function resume() {
+                logTextArea.value += '\n---Continuing---';
+                loopController = setInterval(function() {
+                    onFrame(controller.frame());
+                }, (framePause / 1000));
+                document.getElementById("resumeButton").disabled = true;
+                document.getElementById("pauseButton").disabled = false;                
+            }
+
+            function pause() {
+                clearInterval(loopController);
+                logTextArea.value += '\n---Paused---';
+                document.getElementById("resumeButton").disabled = false;
+                document.getElementById("pauseButton").disabled = true;
+                // To keep textarea scrolled to the bottom when updated
+                logTextArea.scrollTop = logTextArea.scrollHeight;
+            }
 
             // Get frames rolling by connecting the controller
             //controller.connect();
 
             function initChart() {
-				
+
                 chart = new CanvasJS.Chart("chartContainer", {
-                    zoomEnabled: true,
-					title : {
+                    zoomEnabled : true,
+                    title : {
                         text : "Palm Velocity",
-                        fontSize: "18",
+                        fontSize : "19",
                     },
                     data : [{
                         type : "line",
-                        name: "Palm velocity (norm)",
-                        showInLegend: true,
+                        color: "#FF5A40",
+                        name : "Palm velocity (norm)",
+                        showInLegend : true,
                         dataPoints : dps,
                     }],
-                    axisX:{
-                    	title: "seconds",
-                    	//interval: framePause/1000000,
-   						intervalType: "second",
-      					//suffix: " s",
-    				},
-    				axisY:{
-    					title: "millimeters",
-    					minimum: 0,
-    					maximum: 500,
-    					//suffix: " mm",
-    				},
-    				legend:{
-  						fontSize: 14,
- 					}
+                    axisX : {
+                        title : "seconds",
+                        //interval: framePause/1000000,
+                        intervalType : "second",
+                        //suffix: " s",
+                    },
+                    axisY : {
+                        title : "millimeters",
+                        minimum : 0,
+                        maximum : 500,
+                        //suffix: " mm",
+                    },
+                    legend : {
+                        fontSize : 14,
+                    }
                 });
             }
 
@@ -300,10 +298,11 @@
 
                 chart.render();
             }
+
             // Get the velocity of the hand (norm)
-			function normalize3DVector(vector){
-				return Math.sqrt(vector[0]*vector[0] + vector[1]*vector[1] + vector[2]*vector[2]);				
-			}
+            function normalize3DVector(vector) {
+                return Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
+            }
 		</script>
 
 	</body>
