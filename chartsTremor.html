@@ -14,19 +14,22 @@
 				height: 50%;
 				border: 1px solid #000000;
 			}
-			/*#connectButton {
-			 position: relative;
-			 bottom: 0 px;
-			 }*/
+			button {
+				height: 25px;
+				width: 90px;
+				float: none;
+				font-size: 13px;
+			}
 			#logTextArea {
 				float: right;
 				width: 50%;
 				height: 50%;
+				font-size: 15px;
 			}
-			#chartContainer{
+			#handChartContainer {
 				float: left;
 				width: 45%;
-				height: 45%;				
+				height: 45%;
 			}
 		</style>
 		<script type="text/javascript" src="leap.min.js"></script>
@@ -35,21 +38,15 @@
 	</head>
 	<body>
 
-		<canvas id="canvas" ></canvas>
-		<button id="connectButton" onclick="controller.connect()">
+		<canvas id="canvas"></canvas>
+		<button id="connectButton" onclick="controller.connect()" autofocus>
 			Connect
-		</button>
-		<button id="resumeButton" onclick="resume()" disabled="disabled">
-			Resume
-		</button>
-		<button id="pauseButton" onclick="pause()" disabled="disabled">
-			Pause
 		</button>
 		<button id="disconnectButton" onclick="controller.disconnect()" disabled="disabled">
 			Disconnect
 		</button>
-		<div id="chartContainer"></div>
-		<textarea id="logTextArea" readonly="true">LOG:</textarea>																										
+		<div id="handChartContainer"></div>
+		<textarea id="logTextArea" readonly="true">LOG:</textarea>																												
 
 		<script>
             // Get the canvas DOM element
@@ -70,16 +67,18 @@
             // Get the textarea DOM element to allow edit before
             var logTextArea = document.getElementById('logTextArea');
 
-            // Creating a global Frame variable that we can access
-            // throughout the program
-            //var frame;
-
             // number of dataPoints visible at any point
             var dataLength = 300;
             // dataPoints
             var dps = [];
-            // Chart
-            var chart;
+
+            // Charts
+            var handChart;
+            // var fingerOneChart;
+            // var fingerTwoChart;
+            // var fingerThreeChart;
+            // var fingerFourChart;
+            // var fingerFiveChart;
 
             // Vars to control the time (to use in the charts)
             var firstTimestamp = 0;
@@ -100,9 +99,9 @@
                 enableGestures : false,
                 frameEventName : 'deviceFrame'
             });
-            //console.log(controller.frame());
-            // Initializes the chart
-            initChart();
+
+            // Initializes the charts
+            initHandChart();
 
             // Tells the controller what to do every time it sees a frame
             function onFrame(frame) {
@@ -110,159 +109,133 @@
                 c.clearRect(0, 0, width, height);
 
                 // First we loop through all of the hands that the frame sees
-                // TODO: I need to restrict it for just one hand
+                // frame.hands.length
                 for (var i = 0; i < frame.hands.length; i++) {
+                    if (i == 0) {
+                        // For each hand we define it
+                        var hand = frame.hands[i];
 
-                    // For each hand we define it
-                    var hand = frame.hands[i];
+                        if (frameId == 0 && frame.valid) {
+                            logTextArea.value += '\n--- Updated every ' + usToS(framePause) + ' seconds ---\n\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
+                            logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
+                            firstTimestamp = frame.timestamp;
+                            frameId += 1;
+                            lastTimestamp = frame.timestamp;
+                        } else {
+                            currentTimestamp = usToS((frame.timestamp - firstTimestamp));
+                            logTextArea.value += '\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
+                            logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
+                            // To keep textarea scrolled to the bottom when updated
+                            logTextArea.scrollTop = logTextArea.scrollHeight;
 
-                    if (frameId == 0 && frame.valid) {
-                        logTextArea.value += '\n--- Updated every ' + framePause / 1000000 + ' seconds ---\n\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp + '\nHand time visible: ' + hand.timeVisible + ' seconds';
-                        logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
-                        firstTimestamp = frame.timestamp;
-                        frameId += 1;
-                        lastTimestamp = frame.timestamp;
-                    } else {
-                        currentTimestamp = (frame.timestamp - firstTimestamp) / 1000000;
-                        logTextArea.value += '\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp + '\nHand time visible: ' + hand.timeVisible + ' seconds';
-                        logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
-                        // To keep textarea scrolled to the bottom when updated
-                        logTextArea.scrollTop = logTextArea.scrollHeight;
+                            updateHandChart(hand);
 
-                        updateChart(hand);
+                            frameId += 1;
+                            lastTimestamp = frame.timestamp;
+                        }
 
-                        frameId += 1;
-                        lastTimestamp = frame.timestamp;
-                    }
+                        // and get its position, so that it can be passed through
+                        // for drawing the connections
+                        var handPos = leapToScene(hand.palmPosition, frame);
+                        //logTextArea.value += hand.fingers[0].tipVelocity;
+                        // Loop through all the fingers of the hand we are on
+                        for (var j = 0; j < hand.fingers.length; j++) {
 
-                    // and get its position, so that it can be passed through
-                    // for drawing the connections
-                    var handPos = leapToScene(hand.palmPosition, frame);
+                            // Define the finger we are looking at
+                            var finger = hand.fingers[j];
 
-                    // Loop through all the fingers of the hand we are on
-                    for (var j = 0; j < hand.fingers.length; j++) {
+                            // and get its position in Canvas
+                            var fingerPos = leapToScene(finger.tipPosition, frame);
 
-                        // Define the finger we are looking at
-                        var finger = hand.fingers[j];
+                            /*
+                            First Draw the Connection
+                            */
 
-                        // and get its position in Canvas
-                        var fingerPos = leapToScene(finger.tipPosition, frame);
+                            // Setting up the style for the stroke
+                            c.strokeStyle = "#FFA040";
+                            c.lineWidth = 3;
+
+                            // Drawing the path
+                            c.beginPath();
+
+                            // Move to the hand position
+                            c.moveTo(handPos[0], handPos[1]);
+
+                            // Draw a line to the finger position
+                            c.lineTo(fingerPos[0], fingerPos[1]);
+
+                            c.closePath();
+                            c.stroke();
+
+                            /*
+                            Second Draw the Finger
+                            */
+
+                            // Setting up the style for the stroke
+                            c.strokeStyle = "#39AECF";
+                            c.lineWidth = 5;
+
+                            // Creating the path for the finger circle
+                            c.beginPath();
+
+                            // Draw a full circle of radius 6 at the finger position
+                            c.arc(fingerPos[0], fingerPos[1], 20, 0, Math.PI * 2);
+
+                            c.closePath();
+                            c.stroke();
+
+                        }
 
                         /*
-                        First Draw the Connection
+                        Third draw the hand
                         */
 
-                        // Setting up the style for the stroke
-                        c.strokeStyle = "#FFA040";
-                        c.lineWidth = 3;
+                        // Setting up the style for the fill
+                        c.fillStyle = "#FF5A40";
 
-                        // Drawing the path
+                        // Creating the path for the hand circle
                         c.beginPath();
 
-                        // Move to the hand position
-                        c.moveTo(handPos[0], handPos[1]);
-
-                        // Draw a line to the finger position
-                        c.lineTo(fingerPos[0], fingerPos[1]);
+                        // Draw a full circle of radius 10 at the hand position
+                        c.arc(handPos[0], handPos[1], 40, 0, Math.PI * 2);
 
                         c.closePath();
-                        c.stroke();
-
-                        /*
-                        Second Draw the Finger
-                        */
-
-                        // Setting up the style for the stroke
-                        c.strokeStyle = "#39AECF";
-                        c.lineWidth = 5;
-
-                        // Creating the path for the finger circle
-                        c.beginPath();
-
-                        // Draw a full circle of radius 6 at the finger position
-                        c.arc(fingerPos[0], fingerPos[1], 20, 0, Math.PI * 2);
-
-                        c.closePath();
-                        c.stroke();
-
+                        c.fill();
                     }
-
-                    /*
-                    Third draw the hand
-                    */
-
-                    // Setting up the style for the fill
-                    c.fillStyle = "#FF5A40";
-
-                    // Creating the path for the hand circle
-                    c.beginPath();
-
-                    // Draw a full circle of radius 10 at the hand position
-                    c.arc(handPos[0], handPos[1], 40, 0, Math.PI * 2);
-
-                    c.closePath();
-                    c.fill();
-
                 }
-
             }
 
-
+            // Get frames rolling by connecting the controller
             controller.on('connect', function() {
-                logTextArea.value += '\n---Successfully connected---\nCollecting data...';
+                logTextArea.value += '\n---Successfully connected---\n';
                 // This function uses the time in miliseconds
                 loopController = setInterval(function() {
                     onFrame(controller.frame());
-                }, (framePause / 1000));
+                }, usToMs(framePause));
                 document.getElementById("disconnectButton").disabled = false;
-                //document.getElementById("resumeButton").disabled = false;
-                document.getElementById("pauseButton").disabled = false;
                 document.getElementById("connectButton").disabled = true;
             });
 
             controller.on('disconnect', function() {
-            	clearInterval(loopController);
-                logTextArea.value += '\n---Disconnected---\nStopped!';
+                clearInterval(loopController);
+                logTextArea.value += '\n---Disconnected---\nStopped!\n\nReloads the page to restart the application.\n';
                 document.getElementById("disconnectButton").disabled = true;
-                document.getElementById("resumeButton").disabled = true;
-                document.getElementById("pauseButton").disabled = true;
                 document.getElementById("connectButton").disabled = true;
                 // To keep textarea scrolled to the bottom when updated
                 logTextArea.scrollTop = logTextArea.scrollHeight;
             });
 
-            function resume() {
-                logTextArea.value += '\n---Continuing---';
-                loopController = setInterval(function() {
-                    onFrame(controller.frame());
-                }, (framePause / 1000));
-                document.getElementById("resumeButton").disabled = true;
-                document.getElementById("pauseButton").disabled = false;                
-            }
+            function initHandChart() {
 
-            function pause() {
-                clearInterval(loopController);
-                logTextArea.value += '\n---Paused---';
-                document.getElementById("resumeButton").disabled = false;
-                document.getElementById("pauseButton").disabled = true;
-                // To keep textarea scrolled to the bottom when updated
-                logTextArea.scrollTop = logTextArea.scrollHeight;
-            }
-
-            // Get frames rolling by connecting the controller
-            //controller.connect();
-
-            function initChart() {
-
-                chart = new CanvasJS.Chart("chartContainer", {
+                handChart = new CanvasJS.Chart("handChartContainer", {
                     zoomEnabled : true,
                     title : {
                         text : "Palm Velocity",
-                        fontSize : "19",
+                        //fontSize : "19",
                     },
                     data : [{
                         type : "line",
-                        color: "#FF5A40",
+                        color : "#FF5A40",
                         name : "Palm velocity (norm)",
                         showInLegend : true,
                         dataPoints : dps,
@@ -279,30 +252,27 @@
                         maximum : 500,
                         //suffix: " mm",
                     },
-                    legend : {
-                        fontSize : 14,
-                    }
+                    toolTip : {
+                        enabled : false,
+                    },
+                    // legend : {
+                    // fontSize : 14,
+                    // }
                 });
             }
 
-            function updateChart(hand) {
-
+            function updateHandChart(hand) {
                 dps.push({
                     x : currentTimestamp,
-                    y : normalize3DVector(hand.palmVelocity)
+                    y : calc3DVectorNorm(hand.palmVelocity)
                 });
 
                 if (dps.length > dataLength) {
                     dps.shift();
                 }
 
-                chart.render();
-            }
-
-            // Get the velocity of the hand (norm)
-            function normalize3DVector(vector) {
-                return Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
-            }
+                handChart.render();
+            }            
 		</script>
 
 	</body>

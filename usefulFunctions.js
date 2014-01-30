@@ -44,3 +44,23 @@ function leapToScene(leapPos, frame) {
     return [x, -y];
 
 }
+
+// Get the velocity of the hand (norm)
+function calc3DVectorNorm(vector) {
+    return Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
+}
+
+// Convert microseconds to seconds and return it
+function usToS(time) {
+    return time / 1000000;
+}
+
+// Convert milliseconds to seconds and return it
+function msToS(time) {
+    return time / 1000;
+}
+
+// Convert microseconds to milliseconds and return it
+function usToMs(time) {
+    return time / 1000;
+}
