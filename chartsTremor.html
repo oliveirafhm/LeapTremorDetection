@@ -46,7 +46,9 @@
 			Disconnect
 		</button>
 		<div id="handChartContainer"></div>
-		<textarea id="logTextArea" readonly="true">LOG:</textarea>																												
+		<textarea id="logTextArea" readonly="true">LOG:</textarea>																																
+
+
 
 		<script>
             // Get the canvas DOM element
@@ -123,8 +125,8 @@
                             lastTimestamp = frame.timestamp;
                         } else {
                             currentTimestamp = usToS((frame.timestamp - firstTimestamp));
-                            logTextArea.value += '\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
-                            logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
+                            // logTextArea.value += '\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
+                            // logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
                             // To keep textarea scrolled to the bottom when updated
                             logTextArea.scrollTop = logTextArea.scrollHeight;
 
@@ -137,7 +139,7 @@
                         // and get its position, so that it can be passed through
                         // for drawing the connections
                         var handPos = leapToScene(hand.palmPosition, frame);
-                        //logTextArea.value += hand.fingers[0].tipVelocity;
+
                         // Loop through all the fingers of the hand we are on
                         for (var j = 0; j < hand.fingers.length; j++) {
 
@@ -272,8 +274,45 @@
                 }
 
                 handChart.render();
-            }            
-		</script>
+            }
 
+            // function onInitFs(fs) {
+            // console.log(fs.name);
+            // fs.root.getFile('my_log1.txt', null, function(fileEntry) {
+            // console.log(fileEntry.fullPath);
+            // }, errorHandler);
+            // }
+            //
+            // function errorHandler(e) {
+            // console.log('Error', e);
+            // }
+
+            // Note: The file system has been prefixed as of Google Chrome 12:
+            // window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+            // window.webkitStorageInfo.requestQuota(PERSISTENT, 1024 * 1024, function(grantedBytes) {
+            // window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
+            // }, errorHandler);
+            // window.requestFileSystem(window.TEMPORARY, 5*1024*1024 /*5MB*/, onInitFs, errorHandler);
+            
+            
+            // window.URL = window.webkitURL || window.URL;
+            // window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+            // var file = new window.BlobBuilder(), number = Math.random().toString();
+            // //In the append method next, it has to be a string
+            // file.append('test');
+            // //Your random number is put in the file
+// 
+            // var a = document.createElement('a');
+            // a.href = window.URL.createObjectURL(file.getBlob('text/plain'));
+            // a.download = 'filename.txt';
+            // a.textContent = 'Download file!';
+            // document.body.appendChild(a);
+            
+            function onDownload() {
+    			document.location = 'data:Application/octet-stream,' +
+                         encodeURIComponent('teste123');
+			}
+		</script>
+<a href="javascript:onDownload();">Download</a>
 	</body>
 </html>
