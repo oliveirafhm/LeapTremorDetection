@@ -1,0 +1,18 @@
+{
+  "name": "Tremor + Leap Motion",
+  "description": "Tremor data collection using Leap Motion",
+  "main": "tremor.html",
+  "version": "0.1.0",
+  "keywords": ["tremor", "leap motion"],
+  "window": {
+    "title": "Tremor data collection using Leap Motion",
+    "toolbar": true,
+    "width": 800,
+    "height": 600
+  },
+  "contributors":[{
+    "name": "Fábio Henrique M. Oliveira",
+    "email": "oliveirafhm@gmail.com",
+    "web": "http://oliveirafhm.blogspot.com.br/"
+  }]
+}

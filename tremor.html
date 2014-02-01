@@ -5,7 +5,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>Tremor analysis using Leap Motion</title>
+		<title>Tremor data collection using Leap Motion</title>
 		<meta name="author" content="Fábio Henrique M. Oliveira">
 		<style>
 			#canvas {
@@ -276,43 +276,7 @@
                 handChart.render();
             }
 
-            // function onInitFs(fs) {
-            // console.log(fs.name);
-            // fs.root.getFile('my_log1.txt', null, function(fileEntry) {
-            // console.log(fileEntry.fullPath);
-            // }, errorHandler);
-            // }
-            //
-            // function errorHandler(e) {
-            // console.log('Error', e);
-            // }
-
-            // Note: The file system has been prefixed as of Google Chrome 12:
-            // window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
-            // window.webkitStorageInfo.requestQuota(PERSISTENT, 1024 * 1024, function(grantedBytes) {
-            // window.requestFileSystem(PERSISTENT, grantedBytes, onInitFs, errorHandler);
-            // }, errorHandler);
-            // window.requestFileSystem(window.TEMPORARY, 5*1024*1024 /*5MB*/, onInitFs, errorHandler);
             
-            
-            // window.URL = window.webkitURL || window.URL;
-            // window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
-            // var file = new window.BlobBuilder(), number = Math.random().toString();
-            // //In the append method next, it has to be a string
-            // file.append('test');
-            // //Your random number is put in the file
-// 
-            // var a = document.createElement('a');
-            // a.href = window.URL.createObjectURL(file.getBlob('text/plain'));
-            // a.download = 'filename.txt';
-            // a.textContent = 'Download file!';
-            // document.body.appendChild(a);
-            
-            function onDownload() {
-    			document.location = 'data:Application/octet-stream,' +
-                         encodeURIComponent('teste123');
-			}
 		</script>
-<a href="javascript:onDownload();">Download</a>
 	</body>
 </html>
