@@ -7,50 +7,43 @@
 		<meta charset="utf-8">
 		<title>Tremor data collection using Leap Motion</title>
 		<meta name="author" content="Fábio Henrique M. Oliveira">
-		<style>
-			#canvas {
-				float: right;
-				width: 50%;
-				height: 50%;
-				border: 1px solid #000000;
-			}
-			button {
-				height: 25px;
-				width: 90px;
-				float: none;
-				font-size: 13px;
-			}
-			#logTextArea {
-				float: right;
-				width: 50%;
-				height: 50%;
-				font-size: 15px;
-			}
-			#handChartContainer {
-				float: left;
-				width: 45%;
-				height: 45%;
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="tremor.css">
 		<script type="text/javascript" src="leap.min.js"></script>
 		<script type="text/javascript" src="canvasjs.min.js"></script>
 		<script type="text/javascript" src="usefulFunctions.js"></script>
 	</head>
 	<body>
-
+		<div id="patientData" class="div1">
+			Name:
+			<input type="text" id="name" value="Fábio Henrique">
+			<br>
+			<br />
+			<input type="radio" name="gender" value="Male" checked="checked">
+			Male
+			<br>
+			<input type="radio" name="gender" value="Female">
+			Female
+			<br>
+			<br />
+			Age:
+			<input type="number" id="age" value="23"/>
+			<br />
+		</div>
 		<canvas id="canvas"></canvas>
-		<button id="connectButton" onclick="controller.connect()" autofocus>
+		<button id="saveDataButton" class="button1" onclick="createFile()">
+			Save patient data
+		</button>
+		<br />
+		<button id="connectButton" onclick="controller.connect()" disabled="disabled" class="button2">
 			Connect
 		</button>
-		<button id="disconnectButton" onclick="controller.disconnect()" disabled="disabled">
+		<button id="disconnectButton" onclick="controller.disconnect()" disabled="disabled" class="button2">
 			Disconnect
 		</button>
 		<div id="handChartContainer"></div>
-		<textarea id="logTextArea" readonly="true">LOG:</textarea>																																
+		<textarea id="logTextArea" readonly="true">LOG:</textarea>																																								
 
-
-
-		<script>
+		<script type="text/javascript">
             // Get the canvas DOM element
             var canvas = document.getElementById('canvas');
 
@@ -94,7 +87,7 @@
             // Time to wait between frames in microsecond (/1000000 = 0.01 seconds)
             var framePause = (1 / frameRate) * 1000000;
             // Used to control the program loop (using a kind of timer)
-            var loopController;
+			var loopController;
 
             // Creates our Leap Controller
             var controller = new Leap.Controller({
@@ -102,6 +95,31 @@
                 frameEventName : 'deviceFrame'
             });
 
+            //Library to work with files
+            var fs = require('fs');
+            
+            var projectPath = '/Users/oliveirafhm/Documents/Aptana Studio 3 Workspace/tremor_analysis/';
+			var nameField = document.getElementById('name');
+			var fileName;
+			
+			function createFile(){
+				fileName = getTodayDateTime()+' '+removeDiacritics(replaceSpaces(nameField.value, '_'))+'.txt';
+				
+				var genderField = document.getElementsByName('gender');
+				var gender = genderField[0].checked ? genderField[0].value : genderField[1].value;
+				var age = document.getElementById('age');
+				
+				var header = 'Name: '+nameField.value+'\n'+'Gender: '+gender+'\n'+'Age: '+age.value;
+				header += '\nDate and time: '+getTodayDateTime('/',':');
+				// console.log(fileName);
+				// console.log(header);
+				
+				appendFile(fs, (projectPath+fileName), header);
+				
+				document.getElementById("connectButton").disabled = false;
+				document.getElementById("saveDataButton").disabled = true;
+			}
+			
             // Initializes the charts
             initHandChart();
 
@@ -221,10 +239,17 @@
             controller.on('disconnect', function() {
                 clearInterval(loopController);
                 logTextArea.value += '\n---Disconnected---\nStopped!\n\nReloads the page to restart the application.\n';
-                document.getElementById("disconnectButton").disabled = true;
-                document.getElementById("connectButton").disabled = true;
+                document.getElementById("disconnectButton").disabled = true;                
                 // To keep textarea scrolled to the bottom when updated
                 logTextArea.scrollTop = logTextArea.scrollHeight;
+            });
+
+            controller.on('deviceConnected', function() {
+                console.log("A Leap device has been connected.");
+            });
+
+            controller.on('deviceDisconnected', function() {
+                console.log("A Leap device has been disconnected.");
             });
 
             function initHandChart() {
@@ -276,7 +301,6 @@
                 handChart.render();
             }
 
-            
 		</script>
 	</body>
 </html>
