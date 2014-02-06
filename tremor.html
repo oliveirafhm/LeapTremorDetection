@@ -41,7 +41,8 @@
 			Disconnect
 		</button>
 		<div id="handChartContainer"></div>
-		<textarea id="logTextArea" readonly="true">LOG:</textarea>																																								
+		<textarea id="logTextArea" readonly="true">LOG:</textarea>																																										
+
 
 		<script type="text/javascript">
             // Get the canvas DOM element
@@ -87,7 +88,7 @@
             // Time to wait between frames in microsecond (/1000000 = 0.01 seconds)
             var framePause = (1 / frameRate) * 1000000;
             // Used to control the program loop (using a kind of timer)
-			var loopController;
+            var loopController;
 
             // Creates our Leap Controller
             var controller = new Leap.Controller({
@@ -97,29 +98,37 @@
 
             //Library to work with files
             var fs = require('fs');
-            
+
             var projectPath = '/Users/oliveirafhm/Documents/Aptana Studio 3 Workspace/tremor_analysis/';
-			var nameField = document.getElementById('name');
-			var fileName;
-			
-			function createFile(){
-				fileName = getTodayDateTime()+' '+removeDiacritics(replaceSpaces(nameField.value, '_'))+'.txt';
-				
-				var genderField = document.getElementsByName('gender');
-				var gender = genderField[0].checked ? genderField[0].value : genderField[1].value;
-				var age = document.getElementById('age');
-				
-				var header = 'Name: '+nameField.value+'\n'+'Gender: '+gender+'\n'+'Age: '+age.value;
-				header += '\nDate and time: '+getTodayDateTime('/',':');
-				// console.log(fileName);
-				// console.log(header);
-				
-				appendFile(fs, (projectPath+fileName), header);
-				
-				document.getElementById("connectButton").disabled = false;
-				document.getElementById("saveDataButton").disabled = true;
-			}
-			
+            var nameField = document.getElementById('name');
+            var fileName;
+
+            var buffer = [];
+            // 5 * 60
+            var bufferSize = 300;
+
+            // Flushs the buffer writing in a file
+            function flushBuffer() {
+                appendFile(fs, (projectPath + fileName), buffer.toString());
+                buffer.length = 0;
+            }
+
+            function createFile() {
+                fileName = getTodayDate() + ' ' + getTime() + ' ' + removeDiacritics(replaceSpaces(nameField.value, '_')) + '.txt';
+
+                var genderField = document.getElementsByName('gender');
+                var gender = genderField[0].checked ? genderField[0].value : genderField[1].value;
+                var age = document.getElementById('age');
+
+                var header = 'Name: ' + nameField.value + '\n' + 'Gender: ' + gender + '\n' + 'Age: ' + age.value;
+                header += '\nDate: ' + getTodayDate('/');
+
+                appendFile(fs, (projectPath + fileName), header);
+
+                document.getElementById("connectButton").disabled = false;
+                document.getElementById("saveDataButton").disabled = true;
+            }
+
             // Initializes the charts
             initHandChart();
 
@@ -131,16 +140,18 @@
                 // First we loop through all of the hands that the frame sees
                 // frame.hands.length
                 for (var i = 0; i < frame.hands.length; i++) {
-                    if (i == 0) {
+                    if (i == 0 && frame.valid) {
                         // For each hand we define it
                         var hand = frame.hands[i];
 
-                        if (frameId == 0 && frame.valid) {
-                            logTextArea.value += '\n--- Updated every ' + usToS(framePause) + ' seconds ---\n\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
-                            logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
+                        if (frameId == 0) {
+                            logTextArea.value += '\n--- Updated every ' + usToS(framePause) + ' seconds ---\n\nFirst frame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
+                            logTextArea.value += '\nMy first frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
                             firstTimestamp = frame.timestamp;
                             frameId += 1;
                             lastTimestamp = frame.timestamp;
+                                                        
+                            appendFile(fs, (projectPath + fileName), ('\nTime: ' + getTime(':') + '\n--\n'));
                         } else {
                             currentTimestamp = usToS((frame.timestamp - firstTimestamp));
                             // logTextArea.value += '\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
@@ -151,19 +162,19 @@
                             updateHandChart(hand);
 
                             frameId += 1;
-                            lastTimestamp = frame.timestamp;
+                            lastTimestamp = frame.timestamp;                            
                         }
-
+						buffer.push(currentTimestamp, hand.palmPosition);
                         // and get its position, so that it can be passed through
                         // for drawing the connections
                         var handPos = leapToScene(hand.palmPosition, frame);
-
+                        //var tmpLength = buffer.push([]) - 1;
                         // Loop through all the fingers of the hand we are on
                         for (var j = 0; j < hand.fingers.length; j++) {
 
                             // Define the finger we are looking at
                             var finger = hand.fingers[j];
-
+                            buffer.push(finger.tipPosition, finger.length);
                             // and get its position in Canvas
                             var fingerPos = leapToScene(finger.tipPosition, frame);
 
@@ -221,6 +232,12 @@
 
                         c.closePath();
                         c.fill();
+
+                        buffer.push('\n\n');
+                        
+                        if (buffer.length >= bufferSize) {                            
+                            flushBuffer();
+                        }
                     }
                 }
             }
@@ -238,8 +255,11 @@
 
             controller.on('disconnect', function() {
                 clearInterval(loopController);
+                flushBuffer();
+                logTextArea.value += '\nLast frame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
+                logTextArea.value += '\nMy last frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
                 logTextArea.value += '\n---Disconnected---\nStopped!\n\nReloads the page to restart the application.\n';
-                document.getElementById("disconnectButton").disabled = true;                
+                document.getElementById("disconnectButton").disabled = true;
                 // To keep textarea scrolled to the bottom when updated
                 logTextArea.scrollTop = logTextArea.scrollHeight;
             });
@@ -293,11 +313,9 @@
                     x : currentTimestamp,
                     y : calc3DVectorNorm(hand.palmVelocity)
                 });
-
                 if (dps.length > dataLength) {
                     dps.shift();
                 }
-
                 handChart.render();
             }
 

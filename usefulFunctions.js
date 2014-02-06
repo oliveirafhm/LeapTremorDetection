@@ -80,13 +80,11 @@ function replaceSpaces(str, replaceS) {
 }
 
 // 
-function getTodayDateTime(delimiter1, delimiter2) {
-    if(delimiter1 == null){
-        delimiter1 = '_';
+function getTodayDate(delimiter) {
+    if(delimiter == null){
+        delimiter = '_';
     }
-    if(delimiter2 == null){
-        delimiter2 = '_';
-    }
+    
     var today = new Date();
     var dd = today.getDate();
     //January is 0!
@@ -99,12 +97,24 @@ function getTodayDateTime(delimiter1, delimiter2) {
     if (mm < 10) {
         mm = '0' + mm;
     }
+            
+    today = dd + delimiter + mm + delimiter + yyyy;
+    
+    return today;
+}
+
+function getTime(delimiter){
+    if(delimiter == null){
+        delimiter = '_';
+    }
+    var today = new Date();
     
     var h = today.getHours();
     var m = today.getMinutes();
     var s = today.getSeconds();
     
-    today = dd + delimiter1 + mm + delimiter1 + yyyy + ' ' + h + delimiter2 + m + delimiter2 + s;
+    today = h + delimiter + m + delimiter + s;
+    
     return today;
 }
 
