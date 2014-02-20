@@ -45,7 +45,7 @@ function leapToScene(leapPos, frame) {
 
 }
 
-// Get the velocity of the hand (norm)
+// Calc the 3d vector norm and return it
 function calc3DVectorNorm(vector) {
     return Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
 }
@@ -74,7 +74,7 @@ function appendFile(fs, filename, data) {
     });
 }
 
-// Receives a string and return the same one replaced by second param
+// Receives a string and return the same one replaced (the spaces) by second param
 function replaceSpaces(str, replaceS) {
     return str.replace(/\s+/g, replaceS);
 }
@@ -112,8 +112,9 @@ function getTime(delimiter){
     var h = today.getHours();
     var m = today.getMinutes();
     var s = today.getSeconds();
+    var ms = today.getMilliseconds();
     
-    today = h + delimiter + m + delimiter + s;
+    today = h + delimiter + m + delimiter + s + delimiter + ms;
     
     return today;
 }

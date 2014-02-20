@@ -1,6 +1,6 @@
 #canvas {
 	float: right;
-	width: 50%;
+	width: 70%;
 	height: 50%;
 	border: 1px solid #000000;
 }
@@ -21,11 +21,13 @@
 	width: 50%;
 	height: 40%;
 	font-size: 15px;
+	visibility: hidden;
 }
 #handChartContainer {
-	float: left;
-	width: 47%;
-	height: 50%;
+	position: absolute;
+	bottom: 1px;
+	width: 99%;
+	height: 47%;
 }
 .div1 {
 	float: left;

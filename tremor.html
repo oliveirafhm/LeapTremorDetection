@@ -41,8 +41,7 @@
 			Disconnect
 		</button>
 		<div id="handChartContainer"></div>
-		<textarea id="logTextArea" readonly="true">LOG:</textarea>																																										
-
+		<textarea id="logTextArea" readonly="true">LOG:</textarea>																																												
 
 		<script type="text/javascript">
             // Get the canvas DOM element
@@ -64,7 +63,7 @@
             var logTextArea = document.getElementById('logTextArea');
 
             // number of dataPoints visible at any point
-            var dataLength = 300;
+            var dataLength = 600;
             // dataPoints
             var dps = [];
 
@@ -104,13 +103,16 @@
             var fileName;
 
             var buffer = [];
-            // 5 * 60
+            // 60 * 5
             var bufferSize = 300;
 
             // Flushs the buffer writing in a file
             function flushBuffer() {
-                appendFile(fs, (projectPath + fileName), buffer.toString());
-                buffer.length = 0;
+                for (var i = 0; i < bufferSize; i++) {
+                    appendFile(fs, (projectPath + fileName), buffer[i].toString()+'\n');
+                }
+                //Clear buffer
+                buffer.length = 0;                
             }
 
             function createFile() {
@@ -136,6 +138,8 @@
             function onFrame(frame) {
                 //Clears the canvas so we are not drawing multiple frames
                 c.clearRect(0, 0, width, height);
+                
+                var row = [];
 
                 // First we loop through all of the hands that the frame sees
                 // frame.hands.length
@@ -150,7 +154,7 @@
                             firstTimestamp = frame.timestamp;
                             frameId += 1;
                             lastTimestamp = frame.timestamp;
-                                                        
+
                             appendFile(fs, (projectPath + fileName), ('\nTime: ' + getTime(':') + '\n--\n'));
                         } else {
                             currentTimestamp = usToS((frame.timestamp - firstTimestamp));
@@ -162,26 +166,24 @@
                             updateHandChart(hand);
 
                             frameId += 1;
-                            lastTimestamp = frame.timestamp;                            
+                            lastTimestamp = frame.timestamp;
                         }
-						buffer.push(currentTimestamp, hand.palmPosition);
+                        row.push(currentTimestamp, hand.palmPosition);
                         // and get its position, so that it can be passed through
                         // for drawing the connections
                         var handPos = leapToScene(hand.palmPosition, frame);
-                        //var tmpLength = buffer.push([]) - 1;
+
                         // Loop through all the fingers of the hand we are on
                         for (var j = 0; j < hand.fingers.length; j++) {
 
                             // Define the finger we are looking at
                             var finger = hand.fingers[j];
-                            buffer.push(finger.tipPosition, finger.length);
+                            row.push(finger.tipPosition, finger.length);
                             // and get its position in Canvas
                             var fingerPos = leapToScene(finger.tipPosition, frame);
-
                             /*
                             First Draw the Connection
                             */
-
                             // Setting up the style for the stroke
                             c.strokeStyle = "#FFA040";
                             c.lineWidth = 3;
@@ -197,11 +199,9 @@
 
                             c.closePath();
                             c.stroke();
-
                             /*
                             Second Draw the Finger
                             */
-
                             // Setting up the style for the stroke
                             c.strokeStyle = "#39AECF";
                             c.lineWidth = 5;
@@ -216,11 +216,9 @@
                             c.stroke();
 
                         }
-
                         /*
                         Third draw the hand
                         */
-
                         // Setting up the style for the fill
                         c.fillStyle = "#FF5A40";
 
@@ -233,9 +231,9 @@
                         c.closePath();
                         c.fill();
 
-                        buffer.push('\n\n');
-                        
-                        if (buffer.length >= bufferSize) {                            
+                        buffer.push(row);
+
+                        if (buffer.length == bufferSize) {
                             flushBuffer();
                         }
                     }
@@ -277,13 +275,13 @@
                 handChart = new CanvasJS.Chart("handChartContainer", {
                     zoomEnabled : true,
                     title : {
-                        text : "Palm Velocity",
+                        text : "Palm Displacement",
                         //fontSize : "19",
                     },
                     data : [{
                         type : "line",
                         color : "#FF5A40",
-                        name : "Palm velocity (norm)",
+                        name : "Palm displacement (norm)",
                         showInLegend : true,
                         dataPoints : dps,
                     }],
