@@ -89,15 +89,10 @@ function getTodayDate(delimiter) {
     var dd = today.getDate();
     //January is 0!
     var mm = today.getMonth() + 1;
-
     var yyyy = today.getFullYear();
-    if (dd < 10) {
-        dd = '0' + dd;
-    }
-    if (mm < 10) {
-        mm = '0' + mm;
-    }
-            
+    if (dd < 10) dd = '0' + dd;    
+    if (mm < 10) mm = '0' + mm;
+                
     today = dd + delimiter + mm + delimiter + yyyy;
     
     return today;
@@ -109,12 +104,16 @@ function getTime(delimiter){
     }
     var today = new Date();
     
-    var h = today.getHours();
-    var m = today.getMinutes();
-    var s = today.getSeconds();
+    var hh = today.getHours();
+    var mm = today.getMinutes();
+    var ss = today.getSeconds();
     var ms = today.getMilliseconds();
     
-    today = h + delimiter + m + delimiter + s + delimiter + ms;
+    if(hh < 10) hh = '0' + hh;
+    if(mm < 10) mm = '0' + mm;
+    if(ss < 10) ss = '0' + ss;
+    
+    today = hh + delimiter + mm + delimiter + ss + delimiter + ms;
     
     return today;
 }

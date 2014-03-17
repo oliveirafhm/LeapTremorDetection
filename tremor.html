@@ -8,7 +8,7 @@
 		<title>Tremor data collection using Leap Motion</title>
 		<meta name="author" content="Fábio Henrique M. Oliveira">
 		<link rel="stylesheet" type="text/css" href="tremor.css">
-		<script type="text/javascript" src="leap.min.js"></script>
+		<script type="text/javascript" src="leap-0.4.2.min.js"></script>
 		<script type="text/javascript" src="canvasjs.min.js"></script>
 		<script type="text/javascript" src="usefulFunctions.js"></script>
 	</head>
@@ -41,8 +41,7 @@
 			Disconnect
 		</button>
 		<div id="handChartContainer"></div>
-		<textarea id="logTextArea" readonly="true">LOG:</textarea>																																												
-
+		
 		<script type="text/javascript">
             // Get the canvas DOM element
             var canvas = document.getElementById('canvas');
@@ -58,22 +57,14 @@
             // as easily accesible variables
             var width = canvas.width;
             var height = canvas.height;
-
-            // Get the textarea DOM element to allow edit before
-            var logTextArea = document.getElementById('logTextArea');
-
-            // number of dataPoints visible at any point
+            
+            // number of dataPoints visible at any point in the chart
             var dataLength = 600;
             // dataPoints
             var dps = [];
 
             // Charts
             var handChart;
-            // var fingerOneChart;
-            // var fingerTwoChart;
-            // var fingerThreeChart;
-            // var fingerFourChart;
-            // var fingerFiveChart;
 
             // Vars to control the time (to use in the charts)
             var firstTimestamp = 0;
@@ -84,8 +75,8 @@
 
             // Qtd frames/second
             var frameRate = 60;
-            // Time to wait between frames in microsecond (/1000000 = 0.01 seconds)
-            var framePause = (1 / frameRate) * 1000000;
+            // Time to wait between frames in milliseconds
+            var framePause = (1 / frameRate) * 1000;
             // Used to control the program loop (using a kind of timer)
             var loopController;
 
@@ -108,7 +99,7 @@
 
             // Flushs the buffer writing in a file
             function flushBuffer() {
-                for (var i = 0; i < bufferSize; i++) {
+                for (var i = 0; i < buffer.length; i++) {
                     appendFile(fs, (projectPath + fileName), buffer[i].toString()+'\n');
                 }
                 //Clear buffer
@@ -149,8 +140,6 @@
                         var hand = frame.hands[i];
 
                         if (frameId == 0) {
-                            logTextArea.value += '\n--- Updated every ' + usToS(framePause) + ' seconds ---\n\nFirst frame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
-                            logTextArea.value += '\nMy first frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
                             firstTimestamp = frame.timestamp;
                             frameId += 1;
                             lastTimestamp = frame.timestamp;
@@ -158,11 +147,7 @@
                             appendFile(fs, (projectPath + fileName), ('\nTime: ' + getTime(':') + '\n--\n'));
                         } else {
                             currentTimestamp = usToS((frame.timestamp - firstTimestamp));
-                            // logTextArea.value += '\nFrame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
-                            // logTextArea.value += '\nMy frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
-                            // To keep textarea scrolled to the bottom when updated
-                            logTextArea.scrollTop = logTextArea.scrollHeight;
-
+                            
                             updateHandChart(hand);
 
                             frameId += 1;
@@ -242,11 +227,10 @@
 
             // Get frames rolling by connecting the controller
             controller.on('connect', function() {
-                logTextArea.value += '\n---Successfully connected---\n';
                 // This function uses the time in miliseconds
                 loopController = setInterval(function() {
                     onFrame(controller.frame());
-                }, usToMs(framePause));
+                }, framePause);
                 document.getElementById("disconnectButton").disabled = false;
                 document.getElementById("connectButton").disabled = true;
             });
@@ -254,12 +238,7 @@
             controller.on('disconnect', function() {
                 clearInterval(loopController);
                 flushBuffer();
-                logTextArea.value += '\nLast frame id: ' + frame.id + '	Timestamp: ' + frame.timestamp;
-                logTextArea.value += '\nMy last frame id: ' + frameId + '	Time: ' + currentTimestamp + ' seconds\n';
-                logTextArea.value += '\n---Disconnected---\nStopped!\n\nReloads the page to restart the application.\n';
                 document.getElementById("disconnectButton").disabled = true;
-                // To keep textarea scrolled to the bottom when updated
-                logTextArea.scrollTop = logTextArea.scrollHeight;
             });
 
             controller.on('deviceConnected', function() {
@@ -287,7 +266,7 @@
                     }],
                     axisX : {
                         title : "seconds",
-                        //interval: framePause/1000000,
+                        //interval: framePause/1000,
                         intervalType : "second",
                         //suffix: " s",
                     },
