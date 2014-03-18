@@ -11,9 +11,19 @@
 		<script type="text/javascript" src="leap-0.4.2.min.js"></script>
 		<script type="text/javascript" src="canvasjs.min.js"></script>
 		<script type="text/javascript" src="usefulFunctions.js"></script>
+		<script type="text/javascript" src="lzadialog.min.js"></script>
 	</head>
 	<body>
-		<div id="patientData" class="div1">
+		<div class="divStyle">
+			Select the directory to save data that will be collected:
+			<br />
+			<!-- <input type="file" nwdirectory id="inputDirectory" value="Choose directory" autofocus onchange="setDirectory()"/> -->
+			<button onclick="setDirectory();" id="inputDirectory" autofocus>
+				Choose directory
+			</button>
+		</div>
+		<br />
+		<div id="patientData" class="divStyle">
 			Name:
 			<input type="text" id="name" value="Fábio Henrique">
 			<br>
@@ -29,19 +39,22 @@
 			<input type="number" id="age" value="23"/>
 			<br />
 		</div>
-		<canvas id="canvas"></canvas>
-		<button id="saveDataButton" class="button1" onclick="createFile()">
-			Save patient data
-		</button>
 		<br />
-		<button id="connectButton" onclick="controller.connect()" disabled="disabled" class="button2">
-			Connect
-		</button>
-		<button id="disconnectButton" onclick="controller.disconnect()" disabled="disabled" class="button2">
-			Disconnect
-		</button>
+		<div>
+			<button id="saveDataButton" onclick="createFile()" disabled>
+				Save patient data
+			</button>
+			<br />
+			<button id="connectButton" onclick="controller.connect()" disabled>
+				Connect
+			</button>
+			<button id="disconnectButton" onclick="controller.disconnect()" disabled>
+				Disconnect
+			</button>
+		</div>
+		<canvas id="canvas"></canvas>
 		<div id="handChartContainer"></div>
-		
+
 		<script type="text/javascript">
             // Get the canvas DOM element
             var canvas = document.getElementById('canvas');
@@ -57,7 +70,7 @@
             // as easily accesible variables
             var width = canvas.width;
             var height = canvas.height;
-            
+
             // number of dataPoints visible at any point in the chart
             var dataLength = 600;
             // dataPoints
@@ -86,10 +99,40 @@
                 frameEventName : 'deviceFrame'
             });
 
+            //Buttons var
+            var directoryInput = document.getElementById('inputDirectory');
+            var saveDataButton = document.getElementById("saveDataButton");
+            var connectButton = document.getElementById("connectButton");
+            var disconnectButton = document.getElementById("disconnectButton");
+
             //Library to work with files
             var fs = require('fs');
 
-            var projectPath = '/Users/oliveirafhm/Documents/Aptana Studio 3 Workspace/tremor_analysis/';
+            // To detect the operating system on the client machine
+            var OSName = "Unknown OS";
+            if (navigator.appVersion.indexOf("Win") != -1)
+                OSName = "Windows";
+            if (navigator.appVersion.indexOf("Mac") != -1)
+                OSName = "MacOS";
+            if (navigator.appVersion.indexOf("X11") != -1)
+                OSName = "UNIX";
+            if (navigator.appVersion.indexOf("Linux") != -1)
+                OSName = "Linux";
+			
+			var directoryPath;
+			
+            // Set special features to detected OS
+            var breakLine;
+            if (OSName == "Windows") {
+                breakLine = '\r\n';
+                directoryPath = 'C:\\'; //Default
+            } else if (OSName != "Unknown OS") {
+                breakLine = '\n';
+                directoryPath = '/tmp/'; //Default
+            }
+
+            //= '/Users/oliveirafhm/Documents/Aptana Studio 3 Workspace/tremor_analysis/';
+            //var directoryPath = 'C:\\'; // to test on Windows 7 SO
             var nameField = document.getElementById('name');
             var fileName;
 
@@ -100,10 +143,19 @@
             // Flushs the buffer writing in a file
             function flushBuffer() {
                 for (var i = 0; i < buffer.length; i++) {
-                    appendFile(fs, (projectPath + fileName), buffer[i].toString()+'\n');
+                    appendFile(fs, (directoryPath + fileName), buffer[i].toString() + breakLine);
                 }
                 //Clear buffer
-                buffer.length = 0;                
+                buffer.length = 0;
+            }
+
+            function setDirectory() {
+                directoryInput.disabled = true;
+                saveDataButton.disabled = false;
+                LZADialog.selectDir(function(file) {
+                    directoryPath = file.path+'/';
+                    //console.log('complete callback: ' + directoryPath);
+                });
             }
 
             function createFile() {
@@ -113,13 +165,13 @@
                 var gender = genderField[0].checked ? genderField[0].value : genderField[1].value;
                 var age = document.getElementById('age');
 
-                var header = 'Name: ' + nameField.value + '\n' + 'Gender: ' + gender + '\n' + 'Age: ' + age.value;
+                var header = 'Name: ' + nameField.value + breakLine + 'Gender: ' + gender + breakLine + 'Age: ' + age.value;
                 header += '\nDate: ' + getTodayDate('/');
 
-                appendFile(fs, (projectPath + fileName), header);
+                appendFile(fs, (directoryPath + fileName), header);
 
-                document.getElementById("connectButton").disabled = false;
-                document.getElementById("saveDataButton").disabled = true;
+                connectButton.disabled = false;
+                saveDataButton.disabled = true;
             }
 
             // Initializes the charts
@@ -129,7 +181,7 @@
             function onFrame(frame) {
                 //Clears the canvas so we are not drawing multiple frames
                 c.clearRect(0, 0, width, height);
-                
+
                 var row = [];
 
                 // First we loop through all of the hands that the frame sees
@@ -144,10 +196,10 @@
                             frameId += 1;
                             lastTimestamp = frame.timestamp;
 
-                            appendFile(fs, (projectPath + fileName), ('\nTime: ' + getTime(':') + '\n--\n'));
+                            appendFile(fs, (directoryPath + fileName), ('\nTime: ' + getTime(':') + '\n--\n'));
                         } else {
                             currentTimestamp = usToS((frame.timestamp - firstTimestamp));
-                            
+
                             updateHandChart(hand);
 
                             frameId += 1;
@@ -157,6 +209,14 @@
                         // and get its position, so that it can be passed through
                         // for drawing the connections
                         var handPos = leapToScene(hand.palmPosition, frame);
+
+                        // If we have minus of 5 fingers, we need to complete to keep an uniform database
+                        if (hand.fingers.length < 5) {
+                            var i = 5 - hand.fingers.length;
+                            for (var j = 0; j < i; j++) {
+                                row.push([0, 0, 0], 0);
+                            }
+                        }
 
                         // Loop through all the fingers of the hand we are on
                         for (var j = 0; j < hand.fingers.length; j++) {
@@ -231,14 +291,14 @@
                 loopController = setInterval(function() {
                     onFrame(controller.frame());
                 }, framePause);
-                document.getElementById("disconnectButton").disabled = false;
-                document.getElementById("connectButton").disabled = true;
+                disconnectButton.disabled = false;
+                connectButton.disabled = true;
             });
 
             controller.on('disconnect', function() {
                 clearInterval(loopController);
                 flushBuffer();
-                document.getElementById("disconnectButton").disabled = true;
+                disconnectButton.disabled = true;
             });
 
             controller.on('deviceConnected', function() {

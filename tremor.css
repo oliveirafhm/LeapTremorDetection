@@ -1,29 +1,44 @@
 #canvas {
-	float: right;
+	/*float: right;*/
+	position: absolute;
+	top: 6px;
+	right: 6px;
 	width: 70%;
 	height: 50%;
 	border: 1px solid #000000;
 }
-.button1 {
+.divStyle {
+	float: none;
+	border: 1px solid #000000;
+	padding: 20px;
+	width: 22%;
+}
+#saveDataButton {
 	height: 25px;
 	width: 185px;
 	float: none;
 	font-size: 13px;
 }
-.button2 {
+#connectButton {
 	height: 25px;
 	width: 90px;
 	float: none;
 	font-size: 13px;
 }
+#disconnectButton {
+	height: 25px;
+	width: 90px;
+	float: none;
+	font-size: 13px;
+}
+#inputDirectory {
+	float: none;
+	font-size: 13px;
+	width: 185px;
+}
 #handChartContainer {
 	position: absolute;
-	bottom: 1px;
+	bottom: 2px;
 	width: 99%;
 	height: 47%;
-}
-.div1 {
-	float: left;
-	border: 1px solid #000000;
-	padding: 20px;
 }

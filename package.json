@@ -1,14 +1,14 @@
 {
   "name": "Tremor + Leap Motion",
-  "description": "Tremor data collection using Leap Motion",
+  "description": "Hand tremor data collection using Leap Motion",
   "main": "tremor.html",
-  "version": "0.1.0",
-  "keywords": ["tremor", "leap motion"],
+  "version": "0.2.0",
+  "keywords": ["hand tremor", "leap motion"],
   "window": {
-    "title": "Tremor data collection using Leap Motion",
+    "title": "Hand tremor data collection using Leap Motion",
     "toolbar": true,
-    "width": 800,
-    "height": 600
+    "width": 900,
+    "height": 700
   },
   "contributors":[{
     "name": "Fábio Henrique M. Oliveira",
