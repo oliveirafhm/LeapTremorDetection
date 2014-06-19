@@ -2,7 +2,7 @@
   "name": "Tremor + Leap Motion",
   "description": "Hand tremor data collection using Leap Motion",
   "main": "tremor.html",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "keywords": ["hand tremor", "leap motion"],
   "window": {
     "title": "Hand tremor data collection using Leap Motion",

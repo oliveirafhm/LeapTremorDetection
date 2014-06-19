@@ -118,6 +118,19 @@ function getTime(delimiter){
     return today;
 }
 
+function calcElapsedTime(startTime){
+    var elapsedTime;
+    //var currentTime = getTime(':');
+    var currentTimeArray = getTime(':').split(':');    
+    var currentTimeFormated = new Date();
+    currentTimeFormated.setHours(currentTimeArray[0], currentTimeArray[1], currentTimeArray[2], currentTimeArray[3]);
+    
+    var startTimeArray = startTime.split(':');    
+    var startTimeFormated = new Date();
+    startTimeFormated.setHours(startTimeArray[0], startTimeArray[1], startTimeArray[2], startTimeArray[3]);
+        
+}
+
 // To remove accents from a string
 var defaultDiacriticsRemovalMap = [{
     'base' : 'A',

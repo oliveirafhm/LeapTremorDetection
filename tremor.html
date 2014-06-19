@@ -22,10 +22,10 @@
 				Choose directory
 			</button>
 		</div>
-		<br />
+		<!-- <br /> -->
 		<div id="patientData" class="divStyle">
 			Name:
-			<input type="text" id="name" value="Fábio Henrique">
+			<input type="text" id="name" value=''>
 			<br>
 			<br />
 			<input type="radio" name="gender" value="Male" checked="checked">
@@ -36,10 +36,10 @@
 			<br>
 			<br />
 			Age:
-			<input type="number" id="age" value="23"/>
+			<input type="number" id="age" value=''/>
 			<br />
 		</div>
-		<br />
+		<!-- <br /> -->
 		<div>
 			<button id="saveDataButton" onclick="createFile()" disabled>
 				Save patient data
@@ -83,20 +83,24 @@
             var firstTimestamp = 0;
             var currentTimestamp = 0;
             var lastTimestamp = 0;
+            
+            var startTime = 0;
+            //var currentTime = 0;
+            
             // My frame id
             var frameId = 0;
 
             // Qtd frames/second
-            var frameRate = 60;
+            //var frameRate = 60;
             // Time to wait between frames in milliseconds
-            var framePause = (1 / frameRate) * 1000;
+            //var framePause = (1 / frameRate) * 1000;
             // Used to control the program loop (using a kind of timer)
-            var loopController;
+            //var loopController;
 
             // Creates our Leap Controller
             var controller = new Leap.Controller({
                 enableGestures : false,
-                frameEventName : 'deviceFrame'
+                frameEventName : 'animationFrame'
             });
 
             //Buttons var
@@ -118,22 +122,24 @@
                 OSName = "UNIX";
             if (navigator.appVersion.indexOf("Linux") != -1)
                 OSName = "Linux";
-			
-			var directoryPath;
-			
+
+            var directoryPath;
+
             // Set special features to detected OS
-            var breakLine;
+            var breakLine = '\n';
             if (OSName == "Windows") {
                 breakLine = '\r\n';
-                directoryPath = 'C:\\'; //Default
+                //Default path
+                directoryPath = 'C:\\';                                
             } else if (OSName != "Unknown OS") {
                 breakLine = '\n';
-                directoryPath = '/tmp/'; //Default
+                //Default path
+                directoryPath = '/tmp/';                
             }
 
-            //= '/Users/oliveirafhm/Documents/Aptana Studio 3 Workspace/tremor_analysis/';
-            //var directoryPath = 'C:\\'; // to test on Windows 7 SO
             var nameField = document.getElementById('name');
+            var genderField = document.getElementsByName('gender');
+            var age = document.getElementById('age');
             var fileName;
 
             var buffer = [];
@@ -153,25 +159,24 @@
                 directoryInput.disabled = true;
                 saveDataButton.disabled = false;
                 LZADialog.selectDir(function(file) {
-                    directoryPath = file.path+'/';
-                    //console.log('complete callback: ' + directoryPath);
+                    directoryPath = file.path + '/';
                 });
             }
 
-            function createFile() {
-                fileName = getTodayDate() + ' ' + getTime() + ' ' + removeDiacritics(replaceSpaces(nameField.value, '_')) + '.txt';
+            function createFile() {                                
+                if (nameField.value != '' && age.value != '') {
+                    fileName = getTodayDate() + ' ' + getTime() + ' ' + removeDiacritics(replaceSpaces(nameField.value, '_')) + '.txt';
+                    
+                    var gender = '';                
+                	gender = genderField[0].checked ? genderField[0].value : genderField[1].value;
+                    var header = 'Name: ' + nameField.value + breakLine + 'Gender: ' + gender + breakLine + 'Age: ' + age.value;
+                    header += breakLine+'Date: ' + getTodayDate('/');
 
-                var genderField = document.getElementsByName('gender');
-                var gender = genderField[0].checked ? genderField[0].value : genderField[1].value;
-                var age = document.getElementById('age');
+                    appendFile(fs, (directoryPath + fileName), header);
 
-                var header = 'Name: ' + nameField.value + breakLine + 'Gender: ' + gender + breakLine + 'Age: ' + age.value;
-                header += '\nDate: ' + getTodayDate('/');
-
-                appendFile(fs, (directoryPath + fileName), header);
-
-                connectButton.disabled = false;
-                saveDataButton.disabled = true;
+                    connectButton.disabled = false;
+                    saveDataButton.disabled = true;
+                }else window.alert("Fill the fields appropriately, before try to save data.");
             }
 
             // Initializes the charts
@@ -195,17 +200,19 @@
                             firstTimestamp = frame.timestamp;
                             frameId += 1;
                             lastTimestamp = frame.timestamp;
+                            
+                            startTime = getTime(':');
 
-                            appendFile(fs, (directoryPath + fileName), ('\nTime: ' + getTime(':') + '\n--\n'));
+                            appendFile(fs, (directoryPath + fileName), (breakLine+'Time: ' + startTime + breakLine +'--'+breakLine));
                         } else {
                             currentTimestamp = usToS((frame.timestamp - firstTimestamp));
-
+							//var elapsedTime = 
                             updateHandChart(hand);
 
                             frameId += 1;
                             lastTimestamp = frame.timestamp;
                         }
-                        row.push(currentTimestamp, hand.palmPosition);
+                        row.push(getTime(':'), currentTimestamp, hand.palmPosition);
                         // and get its position, so that it can be passed through
                         // for drawing the connections
                         var handPos = leapToScene(hand.palmPosition, frame);
@@ -285,28 +292,31 @@
                 }
             }
 
+            controller.on('frame', onFrame);
+
             // Get frames rolling by connecting the controller
             controller.on('connect', function() {
                 // This function uses the time in miliseconds
-                loopController = setInterval(function() {
-                    onFrame(controller.frame());
-                }, framePause);
+                // loopController = setInterval(function() {
+                // onFrame(controller.frame());
+                // }, framePause);
                 disconnectButton.disabled = false;
                 connectButton.disabled = true;
             });
 
             controller.on('disconnect', function() {
-                clearInterval(loopController);
+                //clearInterval(loopController);
                 flushBuffer();
                 disconnectButton.disabled = true;
+                window.alert("Data saved, update the page if you wish to do another collect.");
             });
 
             controller.on('deviceConnected', function() {
-                console.log("A Leap device has been connected.");
+                window.alert("A Leap device has been connected.");
             });
 
             controller.on('deviceDisconnected', function() {
-                console.log("A Leap device has been disconnected.");
+                window.alert("A Leap device has been disconnected.");
             });
 
             function initHandChart() {
