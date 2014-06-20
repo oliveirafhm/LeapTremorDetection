@@ -8,8 +8,8 @@
 		<title>Tremor data collection using Leap Motion</title>
 		<meta name="author" content="Fábio Henrique M. Oliveira">
 		<link rel="stylesheet" type="text/css" href="tremor.css">
-		<script type="text/javascript" src="leap-0.4.2.min.js"></script>
-		<script type="text/javascript" src="canvasjs.min.js"></script>
+		<script type="text/javascript" src="leap-0.6.0.min.js"></script>
+		<script type="text/javascript" src="canvasjs-1.4.1.min.js"></script>
 		<script type="text/javascript" src="usefulFunctions.js"></script>
 		<script type="text/javascript" src="lzadialog.min.js"></script>
 	</head>
@@ -40,17 +40,22 @@
 			<br />
 		</div>
 		<!-- <br /> -->
-		<div>
+		<div id="mainDivButtons">
 			<button id="saveDataButton" onclick="createFile()" disabled>
 				Save patient data
 			</button>
 			<br />
 			<button id="connectButton" onclick="controller.connect()" disabled>
-				Connect
+				Start
 			</button>
 			<button id="disconnectButton" onclick="controller.disconnect()" disabled>
-				Disconnect
+				Stop
 			</button>
+		</div>
+		<div id="leapDivStatus">
+			<br /><br /><br />
+			<label id="leapStatus">Status: --</label><br />
+			<label id="leapFps">FPS: --</label>		
 		</div>
 		<canvas id="canvas"></canvas>
 		<div id="handChartContainer"></div>
@@ -136,23 +141,27 @@
                 //Default path
                 directoryPath = '/tmp/';                
             }
-
+			
+			// Input vars
             var nameField = document.getElementById('name');
             var genderField = document.getElementsByName('gender');
             var age = document.getElementById('age');
             var fileName;
 
+			// Leap status vars
+			var leapStatus = document.getElementById('leapStatus');
+			var leapFps = document.getElementById('leapFps');
+			
             var buffer = [];
             // 60 * 5
             var bufferSize = 300;
-
             // Flushs the buffer writing in a file
             function flushBuffer() {
                 for (var i = 0; i < buffer.length; i++) {
                     appendFile(fs, (directoryPath + fileName), buffer[i].toString() + breakLine);
                 }
                 //Clear buffer
-                buffer.length = 0;
+                buffer = [];
             }
 
             function setDirectory() {
@@ -184,9 +193,11 @@
 
             // Tells the controller what to do every time it sees a frame
             function onFrame(frame) {
+            	leapFps.innerHTML = 'FPS: '+frame.currentFrameRate;
+            	
                 //Clears the canvas so we are not drawing multiple frames
                 c.clearRect(0, 0, width, height);
-
+				// Var to store each frame data during this interaction (hand data, fingers data, ...)
                 var row = [];
 
                 // First we loop through all of the hands that the frame sees
@@ -203,16 +214,18 @@
                             
                             startTime = getTime(':');
 
-                            appendFile(fs, (directoryPath + fileName), (breakLine+'Time: ' + startTime + breakLine +'--'+breakLine));
+                            appendFile(fs, (directoryPath + fileName), (breakLine+'Time: ' + startTime + breakLine +
+                            'Data structure (per row): Frame number, currentTimestamp(s), hand.confidence(0-1), hand.palmPosition(x,y,z), finger.tipPosition(x,y,z), finger.length(mm)'
+                            +breakLine+'--'+breakLine));
                         } else {
                             currentTimestamp = usToS((frame.timestamp - firstTimestamp));
-							//var elapsedTime = 
+							
                             updateHandChart(hand);
 
                             frameId += 1;
                             lastTimestamp = frame.timestamp;
                         }
-                        row.push(getTime(':'), currentTimestamp, hand.palmPosition);
+                        row.push(frameId, currentTimestamp, hand.confidence, hand.palmPosition);
                         // and get its position, so that it can be passed through
                         // for drawing the connections
                         var handPos = leapToScene(hand.palmPosition, frame);
@@ -282,7 +295,7 @@
 
                         c.closePath();
                         c.fill();
-
+						
                         buffer.push(row);
 
                         if (buffer.length == bufferSize) {
@@ -293,32 +306,63 @@
             }
 
             controller.on('frame', onFrame);
-
+			
             // Get frames rolling by connecting the controller
-            controller.on('connect', function() {
+            controller.on('connect', function(evt) {
                 // This function uses the time in miliseconds
                 // loopController = setInterval(function() {
                 // onFrame(controller.frame());
                 // }, framePause);
                 disconnectButton.disabled = false;
-                connectButton.disabled = true;
+                connectButton.disabled = true;                
+                leapStatus.innerHTML = 'Status: Connected';
             });
 
-            controller.on('disconnect', function() {
+            controller.on('disconnect', function(evt) {
                 //clearInterval(loopController);
                 flushBuffer();
                 disconnectButton.disabled = true;
+                //connectButton.disabled = false;
                 window.alert("Data saved, update the page if you wish to do another collect.");
+                leapStatus.innerHTML = 'Status: Disconnected';
+            });
+			
+			controller.on('deviceAttached', function(evt){
+				console.log("Device attached event");
+			});
+			
+            // controller.on('deviceConnected', function(evt) {
+                // console.log("A Leap device has been connected.");
+            // });
+// 
+            // controller.on('deviceDisconnected', function(evt) {
+                // console.log("A Leap device has been disconnected.");
+            // });
+            
+            controller.on('deviceRemoved', function(evt){
+				console.log("Device removed event");
             });
 
-            controller.on('deviceConnected', function() {
-                window.alert("A Leap device has been connected.");
+			controller.on('deviceStopped', function(evt){
+				console.log("Device stopped streaming event");
             });
-
-            controller.on('deviceDisconnected', function() {
-                window.alert("A Leap device has been disconnected.");
+            
+            controller.on('deviceStreaming', function(evt){
+				console.log("Device started streaming event");
             });
-
+            
+            controller.on('protocol', function(protocol){
+				console.log("Protocol event: " + protocol.version);
+            });
+            
+            controller.on('streamingStarted', function(evt){
+				console.log("Service/daemon started streaming event");
+            });
+            
+            controller.on('streamingStopped', function(evt){
+				console.log("Service/daemon stopped streaming event");
+            });
+    
             function initHandChart() {
 
                 handChart = new CanvasJS.Chart("handChartContainer", {
@@ -339,6 +383,7 @@
                         //interval: framePause/1000,
                         intervalType : "second",
                         //suffix: " s",
+                        gridThickness: 1,
                     },
                     axisY : {
                         title : "millimeters",
