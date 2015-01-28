@@ -117,7 +117,7 @@ function getTime(delimiter){
     
     return today;
 }
-
+// Unused
 function calcElapsedTime(startTime){
     var elapsedTime;
     //var currentTime = getTime(':');

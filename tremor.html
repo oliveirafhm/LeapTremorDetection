@@ -215,7 +215,7 @@
                             startTime = getTime(':');
 
                             appendFile(fs, (directoryPath + fileName), (breakLine+'Time: ' + startTime + breakLine +
-                            'Data structure (per row): Frame number, currentTimestamp(s), hand.confidence(0-1), hand.palmPosition(x,y,z), finger.tipPosition(x,y,z), finger.length(mm)'
+                            'Data structure (per row): Frame number, currentTimestamp(s), hand.confidence(0-1), hand.palmPosition(x,y,z), hand.palmVelocity(x,y,z), finger.tipPosition(x,y,z), finger.length(mm)'
                             +breakLine+'--'+breakLine));
                         } else {
                             currentTimestamp = usToS((frame.timestamp - firstTimestamp));
@@ -225,7 +225,7 @@
                             frameId += 1;
                             lastTimestamp = frame.timestamp;
                         }
-                        row.push(frameId, currentTimestamp, hand.confidence, hand.palmPosition);
+                        row.push(frameId, currentTimestamp, hand.confidence, hand.palmPosition, hand.palmVelocity);
                         // and get its position, so that it can be passed through
                         // for drawing the connections
                         var handPos = leapToScene(hand.palmPosition, frame);
@@ -368,13 +368,13 @@
                 handChart = new CanvasJS.Chart("handChartContainer", {
                     zoomEnabled : true,
                     title : {
-                        text : "Palm Displacement",
+                        text : "Palm Velocity",
                         //fontSize : "19",
                     },
                     data : [{
                         type : "line",
                         color : "#FF5A40",
-                        name : "Palm displacement (norm)",
+                        name : "Palm velocity (norm)",
                         showInLegend : true,
                         dataPoints : dps,
                     }],
@@ -388,7 +388,7 @@
                     axisY : {
                         title : "millimeters",
                         minimum : 0,
-                        maximum : 500,
+                        maximum : 300,
                         //suffix: " mm",
                     },
                     toolTip : {
