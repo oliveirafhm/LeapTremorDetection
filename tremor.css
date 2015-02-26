@@ -11,23 +11,26 @@
 	float: none;
 	border: 1px solid #000000;
 	padding: 10px;
-	width: 22%;
+	width: 23%;
+}
+.numberInputStyle{
+	width: 60px;
 }
 #saveDataButton {
-	height: 25px;
-	width: 185px;
+	height: 28px;
+	width: 226px;
 	float: none;
 	font-size: 13px;
 }
 #connectButton {
 	height: 25px;
-	width: 90px;
+	width: 111px;
 	float: none;
 	font-size: 13px;
 }
 #disconnectButton {
 	height: 25px;
-	width: 90px;
+	width: 111px;
 	float: none;
 	font-size: 13px;
 }
