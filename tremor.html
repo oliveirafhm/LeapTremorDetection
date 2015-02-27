@@ -99,13 +99,6 @@
 			// My frame id
 			var frameId = 0;
 
-			// Qtd frames/second
-			//var frameRate = 60;
-			// Time to wait between frames in milliseconds
-			//var framePause = (1 / frameRate) * 1000;
-			// Used to control the program loop (using a kind of timer)
-			//var loopController;
-
 			// Creates our Leap Controller
 			var controller = new Leap.Controller({
 				enableGestures : false,
@@ -192,8 +185,8 @@
 					header += breakLine + 'Date: ' + getTodayDate('/');
 
 					appendFile(fs, (directoryPath + fileName), header);
-                    
-                    collectionTime.disabled = false;
+
+					collectionTime.disabled = false;
 					connectButton.disabled = false;
 					saveDataButton.disabled = true;
 				} else
@@ -289,7 +282,6 @@
 
 							c.closePath();
 							c.stroke();
-
 						}
 						/*
 						Third draw the hand
@@ -317,31 +309,37 @@
 				}
 			}
 
-
 			controller.on('frame', onFrame);
 
 			function connect() {
-				if (collectionTime.value > 0)
+				if (collectionTime.value > 0) {
 					controller.connect();
-				else
+					// Open Serial
+					var result = externalSync(1, true);
+					console.log(result);
+                    // Send High (pulse = 5v)    
+					var result = externalSync(3, true);
+					console.log(result);
+				} else
 					window.alert("Fill the fields appropriately, before try to start the collection.");
 			}
 
 			// Get frames rolling by connecting the controller
-			controller.on('connect', function(evt) {
-				// This function uses the time in miliseconds
-				// loopController = setInterval(function() {
-				// onFrame(controller.frame());
-				// }, framePause);
+			controller.on('connect', function(evt) {				
 				collectionTime.disabled = true;
 				disconnectButton.disabled = false;
 				connectButton.disabled = true;
 				leapStatus.innerHTML = 'Status: Connected';
 			});
 
-			controller.on('disconnect', function(evt) {
-				//clearInterval(loopController);
+			controller.on('disconnect', function(evt) {				
 				flushBuffer();
+				// Send Low
+				var result = externalSync(4, true);
+				console.log(result);
+                // Close Serial
+				var result = externalSync(2, true);
+				console.log(result);
 				disconnectButton.disabled = true;
 				//connectButton.disabled = false;
 				window.alert("Data saved, update the page if you wish to do another collect.");
@@ -351,14 +349,6 @@
 			controller.on('deviceAttached', function(evt) {
 				console.log("Device attached event");
 			});
-
-			// controller.on('deviceConnected', function(evt) {
-			// console.log("A Leap device has been connected.");
-			// });
-			//
-			// controller.on('deviceDisconnected', function(evt) {
-			// console.log("A Leap device has been disconnected.");
-			// });
 
 			controller.on('deviceRemoved', function(evt) {
 				console.log("Device removed event");

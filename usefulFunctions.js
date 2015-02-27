@@ -405,28 +405,80 @@ function removeDiacritics(str) {
 }
 
 // Library to invoke C# DLL
-// var edge = require('edge');
-// var add = edge.func({
-    // source: function() {/*
-        // namespace SimpleLibrary
-		// {
-		    // public class HelloWorld
-		    // {
-					// public async Task<object> SayHello(object input)
-					// {
-						// return await Task.FromResult<string>(string.Format("Hello {0} From C#", input));
-					// }
-		    // }
-		// }
-    // */},
-    // references: ["Sincronizacao_Leap_Luva_DLL.dll"]
-// });
-// // asynchronous execution with a callback
-// add("Fábio", function(error, result) {
-	// if (error) throw error;
-	// console.log(result);
+var edge = require('edge');
+ 
+var externalSync = edge.func(function() {/*
+    #r "Sincronizacao_Leap_Luva_DLL.dll"
+    using System.Threading.Tasks;
+    using Sincronizador_Software;
+
+    public class Startup
+    {
+        public Sincronizador_Class Sincronizacao1 = new Sincronizador_Class();
+        
+        // 1 = ConnectSerial / 2 = CloseSerial / 3 = SendHigh / 4 = SendLow
+        public async Task<object> Invoke(object input)
+        {
+            int option = (int)input;
+            string msg = "";
+            switch (option){
+            	case 1:
+            		if(connectSerial())
+            			msg = "SerialOpened";
+            		else
+            			msg = "SerialClosed";
+            		break;
+            	case 2:
+            		closeSerial();
+            		msg = "SerialClosed";
+            		break;
+            	case 3:
+            		msg = "High: " + sendHigh();
+            		break;
+            	case 4:
+            		msg = "Low: " + sendLow();
+            		break;
+            	default:
+            		msg = "Invalid option";
+            		break;
+            }
+            
+            return msg;
+        }
+        
+        private bool connectSerial(){
+        	return Sincronizacao1.inicializar_serial();         
+        }
+        
+        private void closeSerial(){
+        	Sincronizacao1.fechar_serial();
+        }
+        
+        private bool sendHigh(){
+        	return Sincronizacao1.send_HIGH();
+        }
+        
+        private bool sendLow(){
+        	return Sincronizacao1.send_LOW();
+        }
+    }    
+*/});
+
+// asynchronous execution with a callback
+// helloWorld('JavaScript', function (error, result) {
+    // if (error) throw error;
+    // console.log(result);
 // });
 
 // synchronous execution with a return value
-// var result = add("Fábio", true);
+// var result = externalSync(1, true);
+// console.log(result);
+// 
+// var result = externalSync(3, true);
+// console.log(result);
+
+// var result = externalSync(4, true);
+// console.log(result);
+// 
+// var result = externalSync(2, true);
 // console.log(result);
