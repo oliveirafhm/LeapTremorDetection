@@ -3,425 +3,457 @@
 -->
 <!-- <!DOCTYPE html> -->
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Tremor data collection using Leap Motion (by Fábio Henrique and Adriano Andrade)</title>
-        <meta name="author" content="Fábio Henrique M. Oliveira">
-        <link rel="stylesheet" type="text/css" href="tremor.css">
-        <script type="text/javascript" src="leap-0.6.0.min.js"></script>
-        <script type="text/javascript" src="canvasjs-1.4.1.min.js"></script>
-        <script type="text/javascript" src="usefulFunctions.js"></script>
-        <script type="text/javascript" src="lzadialog.min.js"></script>
-    </head>
-    <body>
-        <div class="divStyle">
-            Select the directory to save data that will be collected:
-            <br />
-            <!-- <input type="file" nwdirectory id="inputDirectory" value="Choose directory" autofocus onchange="setDirectory()"/> -->
-            <button onclick="setDirectory();" id="inputDirectory" autofocus>
-                Choose directory
-            </button>
-        </div>
-        <!-- <br /> -->
-        <div id="patientData" class="divStyle">
-            Name:
-            <input type="text" id="name" value=''/>
-            <br/>
-            <br />
-            <input type="radio" name="gender" value="Male" checked="checked">
-            Male
-            <br>
-            <input type="radio" name="gender" value="Female">
-            Female
-            <br/>
-            <br />
-            Age:
-            <input type="number" id="age" value='' class="numberInputStyle"/>
-            <br />
-        </div>
-        <!-- <br /> -->
-        <div id="mainDivButtons">
-            <button id="saveDataButton" onclick="createFile()" disabled>
-                Save patient data
-            </button>
-            <br />
-            Collection time:
-            <input type="number" id="collectionTime" value="15" class="numberInputStyle" disabled/>
-            seconds
-            <br />
-            <button id="connectButton" onclick="connect()" disabled>
-                Start
-            </button>
-            <button id="disconnectButton" onclick="controller.disconnect()" disabled>
-                Stop
-            </button>
-        </div>
-        <div id="leapDivStatus">
-            <label id="leapStatus">Status: --</label>
-            <!-- <br />
-            <label id="leapFps">FPS: --</label> -->
-        </div>
-        <canvas id="canvas"></canvas>
-        <div id="handChartContainer"></div>
+	<head>
+		<meta charset="utf-8">
+		<title>Tremor data collection using Leap Motion (by Fábio Henrique and Adriano Andrade)</title>
+		<meta name="author" content="Fábio Henrique M. Oliveira">
+		<link rel="stylesheet" type="text/css" href="tremor.css">
+		<script type="text/javascript" src="leap-0.6.4.min.js"></script>
+		<script type="text/javascript" src="canvasjs-1.4.1.min.js"></script>
+		<script type="text/javascript" src="usefulFunctions.js"></script>
+		<script type="text/javascript" src="lzadialog.min.js"></script>
+	</head>
+	<body>
+		<div class="divStyle">
+			Select the directory to save data that will be collected:
+			<br />
+			<!-- <input type="file" nwdirectory id="inputDirectory" value="Choose directory" autofocus onchange="setDirectory()"/> -->
+			<button onclick="setDirectory();" id="inputDirectory" autofocus>
+				Choose directory
+			</button>
+		</div>
+		<!-- <br /> -->
+		<div id="patientData" class="divStyle">
+			Name:
+			<input type="text" id="name" value=''/>
+			<br/>
+			<br />
+			<input type="radio" name="gender" value="Male" checked="checked">
+			Male
+			<br>
+			<input type="radio" name="gender" value="Female">
+			Female
+			<br/>
+			<br />
+			Age:
+			<input type="number" id="age" value='' class="numberInputStyle"/>
+			<br />
+		</div>
+		<!-- <br /> -->
+		<div id="mainDivButtons">
+			<button id="saveDataButton" onclick="createFile()" disabled>
+				Save patient data
+			</button>
+			<br />
+			Collection time:
+			<input type="number" id="collectionTime" value="15" class="numberInputStyle" disabled/>
+			seconds
+			<br />
+			<button id="connectButton" onclick="connect();" disabled>
+				Start
+			</button>
+			<button id="disconnectButton" onclick="controller.disconnect();" disabled>
+				Stop
+			</button>
+		</div>
+		<div id="leapDivStatus">
+			<label id="leapStatus">Status: --</label>
+			<!-- <br />
+			<label id="leapFps">FPS: --</label> -->
+		</div>
+		<canvas id="canvas"></canvas>
+		<div id="handChartContainer"></div>
 
-        <script type="text/javascript">
-			// Get the canvas DOM element
-			var canvas = document.getElementById('canvas');
+		<script type="text/javascript">
+            // Get the canvas DOM element
+            var canvas = document.getElementById('canvas');
 
-			// Making sure we have the proper aspect ratio for our canvas
-			canvas.width = canvas.clientWidth;
-			canvas.height = canvas.clientHeight;
+            // Making sure we have the proper aspect ratio for our canvas
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
 
-			// Create the context we will use for drawing
-			var c = canvas.getContext('2d');
+            // Create the context we will use for drawing
+            var c = canvas.getContext('2d');
 
-			// Save the canvas width and canvas height
-			// as easily accesible variables
-			var width = canvas.width;
-			var height = canvas.height;
+            // Save the canvas width and canvas height
+            // as easily accesible variables
+            var width = canvas.width;
+            var height = canvas.height;
 
-			// number of dataPoints visible at any point in the chart
-			var dataLength = 600;
-			// dataPoints
-			var dps = [];
+            // number of dataPoints visible at any point in the chart
+            var dataLength = 600;
+            // dataPoints
+            var dps = [];
 
-			// Charts
-			var handChart;
+            // Charts
+            var handChart;
 
-			// Vars to control the time (to use in the charts)
-			var firstTimestamp = 0;
-			var currentTimestamp = 0;
-			var lastTimestamp = 0;
+            // Vars to control the time (to use in the charts)
+            var firstTimestamp = 0;
+            var currentTimestamp = 0;
+            var lastTimestamp = 0;
 
-			var startTime = 0;
-			//var currentTime = 0;
+            var startTime = 0;
+            //var currentTime = 0;
 
-			// My frame id
-			var frameId = 0;
+            // My frame id
+            var frameId = 0;
 
-			// Creates our Leap Controller
-			var controller = new Leap.Controller({
-				enableGestures : false,
-				frameEventName : 'animationFrame'
-			});
+            // Creates our Leap Controller
+            var controller = new Leap.Controller({
+                enableGestures : false,                
+                background : true,
+                optimizeHMD : false,
+                frameEventName : 'animationFrame',
+                loopWhileDisconnected : false
+            });
 
-			//Buttons var
-			var directoryInput = document.getElementById('inputDirectory');
-			var saveDataButton = document.getElementById("saveDataButton");
-			var connectButton = document.getElementById("connectButton");
-			var disconnectButton = document.getElementById("disconnectButton");
+            //Buttons var
+            var directoryInput = document.getElementById('inputDirectory');
+            var saveDataButton = document.getElementById("saveDataButton");
+            var connectButton = document.getElementById("connectButton");
+            var disconnectButton = document.getElementById("disconnectButton");
 
-			//Library to work with files
-			var fs = require('fs');
+            //Library to work with files
+            var fs = require('fs');
 
-			// To detect the operating system on the client machine
-			var OSName = "Unknown OS";
-			if (navigator.appVersion.indexOf("Win") != -1)
-				OSName = "Windows";
-			if (navigator.appVersion.indexOf("Mac") != -1)
-				OSName = "MacOS";
-			if (navigator.appVersion.indexOf("X11") != -1)
-				OSName = "UNIX";
-			if (navigator.appVersion.indexOf("Linux") != -1)
-				OSName = "Linux";
+            // // To detect the operating system on the client machine
+            // var OSName = "Unknown OS";
+            // if (navigator.appVersion.indexOf("Win") != -1)
+                // OSName = "Windows";
+            // if (navigator.appVersion.indexOf("Mac") != -1)
+                // OSName = "MacOS";
+            // if (navigator.appVersion.indexOf("X11") != -1)
+                // OSName = "UNIX";
+            // if (navigator.appVersion.indexOf("Linux") != -1)
+                // OSName = "Linux";
 
-			var directoryPath;
+            var directoryPath;
 
-			// Set special features to detected OS
-			var breakLine = '\n';
-			if (OSName == "Windows") {
-				breakLine = '\r\n';
-				//Default path
-				directoryPath = 'C:\\';
-			} else if (OSName != "Unknown OS") {
-				breakLine = '\n';
-				//Default path
-				directoryPath = '/tmp/';
-			}
+            // Set special features to detected OS
+            var breakLine = '\n';
+            if (OSName == "Windows") {
+                breakLine = '\r\n';
+                //Default path
+                directoryPath = 'C:\\';
+            } else if (OSName != "Unknown OS") {
+                breakLine = '\n';
+                //Default path
+                directoryPath = '/tmp/';
+            }
 
-			// Input vars
-			var nameField = document.getElementById('name');
-			var genderField = document.getElementsByName('gender');
-			var age = document.getElementById('age');
-			var fileName;
-			var collectionTime = document.getElementById('collectionTime');
+            // Input vars
+            var nameField = document.getElementById('name');
+            var genderField = document.getElementsByName('gender');
+            var age = document.getElementById('age');
+            var fileName;
+            var collectionTime = document.getElementById('collectionTime');
 
-			// Leap status vars
-			var leapStatus = document.getElementById('leapStatus');
-			//var leapFps = document.getElementById('leapFps');
+            // Leap status vars
+            var leapStatus = document.getElementById('leapStatus');
+            //var leapFps = document.getElementById('leapFps');
 
-			var buffer = [];
-			// 60 * 10
-			var bufferSize = 600;
-			// Flushs the buffer writing in a file
-			function flushBuffer() {
-				var tempBuffer = [];
-				for (var i = 0; i < buffer.length; i++) {
-					//console.log(buffer[i].toString() + breakLine);
-					tempBuffer.push(buffer[i].toString() + breakLine);
-				}
-				//tempBuffer.join('');
-				appendFile(fs, (directoryPath + fileName), tempBuffer.join(''));
-				//Clear buffers
-				buffer = [];
-				tempBuffer = [];
-			}
+            var buffer = [];
+            // 60 * 10
+            var bufferSize = 600;
+            // Flushs the buffer writing in a file
+            function flushBuffer() {
+                var tempBuffer = [];
+                for (var i = 0; i < buffer.length; i++) {
+                    //console.log(buffer[i].toString() + breakLine);
+                    tempBuffer.push(buffer[i].toString() + breakLine);
+                }
+                //tempBuffer.join('');
+                appendFile(fs, (directoryPath + fileName), tempBuffer.join(''));
+                //Clear buffers
+                buffer = [];
+                tempBuffer = [];
+            }
 
-			function setDirectory() {
-				directoryInput.disabled = true;
-				saveDataButton.disabled = false;
-				LZADialog.selectDir(function(file) {
-					directoryPath = file.path + '/';
-				});
-			}
+            function setDirectory() {
+                directoryInput.disabled = true;
+                saveDataButton.disabled = false;
+                LZADialog.selectDir(function(file) {
+                    directoryPath = file.path + '/';
+                });
+            }
 
-			function createFile() {
-				if (nameField.value != '' && age.value != '') {
-					fileName = getTodayDate() + ' ' + getTime() + ' ' + removeDiacritics(replaceSpaces(nameField.value, '_')) + '.txt';
+            function createFile() {
+                if (nameField.value != '' && age.value != '') {
+                    fileName = getTodayDate() + ' ' + getTime() + ' ' + removeDiacritics(replaceSpaces(nameField.value, '_')) + '.txt';
 
-					var gender = '';
-					gender = genderField[0].checked ? genderField[0].value : genderField[1].value;
-					var header = 'Name: ' + nameField.value + breakLine + 'Gender: ' + gender + breakLine + 'Age: ' + age.value;
-					header += breakLine + 'Date: ' + getTodayDate('/');
+                    var gender = '';
+                    gender = genderField[0].checked ? genderField[0].value : genderField[1].value;
+                    var header = 'Name: ' + nameField.value + breakLine + 'Gender: ' + gender + breakLine + 'Age: ' + age.value;
+                    header += breakLine + 'Date: ' + getTodayDate('/');
 
-					appendFile(fs, (directoryPath + fileName), header);
+                    appendFile(fs, (directoryPath + fileName), header);
 
-					collectionTime.disabled = false;
-					connectButton.disabled = false;
-					saveDataButton.disabled = true;
-				} else
-					window.alert("Fill the fields appropriately, before try to save data.");
-			}
+                    collectionTime.disabled = false;
+                    collectionTime.focus();
+                    connectButton.disabled = false;
+                    saveDataButton.disabled = true;
+                } else
+                    window.alert("Fill the fields appropriately, before try to save data.");
+            }
 
-			// Initializes the charts
-			initHandChart();
+            // Initializes the charts
+            initHandChart();
 
-			// Tells the controller what to do every time it sees a frame
-			function onFrame(frame) {
-				//leapFps.innerHTML = 'FPS: ' + frame.currentFrameRate;
+            // Tells the controller what to do every time it sees a frame
+            function onFrame(frame) {
+                //leapFps.innerHTML = 'FPS: ' + frame.currentFrameRate;
+				//console.log("OnFrame");
+                //Clears the canvas so we are not drawing multiple frames
+                c.clearRect(0, 0, width, height);
+                // Var to store each frame data during this interaction (hand data, fingers data, ...)
+                var row = [];
 
-				//Clears the canvas so we are not drawing multiple frames
-				c.clearRect(0, 0, width, height);
-				// Var to store each frame data during this interaction (hand data, fingers data, ...)
-				var row = [];
+                // First we loop through all of the hands that the frame sees
+                // frame.hands.length
+                for (var i = 0; i < frame.hands.length; i++) {
+                    if (i == 0 && frame.valid) {
+                        // For each hand we define it
+                        var hand = frame.hands[i];
 
-				// First we loop through all of the hands that the frame sees
-				// frame.hands.length
-				for (var i = 0; i < frame.hands.length; i++) {
-					if (i == 0 && frame.valid) {
-						// For each hand we define it
-						var hand = frame.hands[i];
+                        if (frameId == 0) {
+                            firstTimestamp = frame.timestamp;
+                            frameId += 1;
+                            lastTimestamp = frame.timestamp;
 
-						if (frameId == 0) {
-							firstTimestamp = frame.timestamp;
-							frameId += 1;
-							lastTimestamp = frame.timestamp;
+                            startTime = getTime(':');
 
-							startTime = getTime(':');
+                            appendFile(fs, (directoryPath + fileName), (breakLine + 'Time: ' + startTime + breakLine + 'Data structure (per row):' + breakLine + '[frameNumber], [currentTimestamp(S)], [handId], [handConfidence(0-1)], [handTimeVisible(S)], [handType(L||R)], [handPalmPosition(X)], [handPalmPosition(Y)], [handPalmPosition(Z)], [handPalmVelocity(X)], [handPalmVelocity(Y)], [handPalmVelocity(Z)], [handPitch(R)], [handYaw(R)], [handRoll(R)], [handPalmNormal(X)], [handPalmNormal(Y)], [handPalmNormal(Z)], [handDirection(X)], [handDirection(Y)], [handDirection(Z)], [thumbTipPosition(X)], [thumbTipPosition(Y)], [thumbTipPosition(Z)], [indexTipPosition(X)], [indexTipPosition(Y)], [indexTipPosition(Z)], [middleTipPosition(X)], [middleTipPosition(Y)], [middleTipPosition(Z)], [ringTipPosition(X)], [ringTipPosition(Y)], [ringTipPosition(Z)], [pinkyTipPosition(X)], [pinkyTipPosition(Y)], [pinkyTipPosition(Z)]' + breakLine));
+                        } else {
+                            currentTimestamp = usToS((frame.timestamp - firstTimestamp));
 
-							appendFile(fs, (directoryPath + fileName), (breakLine + 'Time: ' + startTime + breakLine + 'Data structure (per row):' + breakLine + 'Frame number, currentTimestamp(s), hand.confidence(0-1), hand.palmPosition(x,y,z), hand.palmVelocity(x,y,z), finger.tipPosition(x,y,z), finger.length(mm)' + breakLine));
-						} else {
-							currentTimestamp = usToS((frame.timestamp - firstTimestamp));
+                            updateHandChart(hand);
 
-							updateHandChart(hand);
+                            frameId += 1;
+                            lastTimestamp = frame.timestamp;
+                        }
+                        row.push(frameId, currentTimestamp, hand.id, hand.confidence, hand.timeVisible, hand.type, hand.palmPosition, hand.palmVelocity, hand.pitch(), hand.yaw(), hand.roll(), hand.palmNormal, hand.direction);
+                        // and get its position, so that it can be passed through
+                        // for drawing the connections
+                        var handPos = leapToScene(hand.palmPosition, frame);
 
-							frameId += 1;
-							lastTimestamp = frame.timestamp;
-						}
-						row.push(frameId, currentTimestamp, hand.confidence, hand.palmPosition, hand.palmVelocity);
-						// and get its position, so that it can be passed through
-						// for drawing the connections
-						var handPos = leapToScene(hand.palmPosition, frame);
+                        // If we have minus of 5 fingers, we need to complete to keep an uniform database
+                        // if (hand.fingers.length < 5) {
+                        // var i = 5 - hand.fingers.length;
+                        // for (var j = 0; j < i; j++) {
+                        // row.push([0, 0, 0], 0);
+                        // }
+                        // }
 
-						// If we have minus of 5 fingers, we need to complete to keep an uniform database
-						if (hand.fingers.length < 5) {
-							var i = 5 - hand.fingers.length;
-							for (var j = 0; j < i; j++) {
-								row.push([0, 0, 0], 0);
-							}
-						}
+                        // Loop through all the fingers of the hand we are on
+                        // for (var j = 0; j < hand.fingers.length; j++) {
+                        for (var j = 0; j < 5; j++) {
+                            // Define the finger we are looking at
+                            //var finger = hand.fingers[j];
+                            var finger;
+                            switch(j) {
+                            case 0:
+                                finger = hand.thumb;
+                                break;
+                            case 1:
+                                finger = hand.indexFinger;
+                                break;
+                            case 2:
+                                finger = hand.middleFinger;
+                                break;
+                            case 3:
+                                finger = hand.ringFinger;
+                                break;
+                            case 4:
+                                finger = hand.pinky;
+                                break;
+                            default:
+                                finger = new Finger();
+                            }
 
-						// Loop through all the fingers of the hand we are on
-						for (var j = 0; j < hand.fingers.length; j++) {
+                            row.push(finger.tipPosition);
+                            // and get its position in Canvas
+                            var fingerPos = leapToScene(finger.tipPosition, frame);
+                            /*
+                            First Draw the Connection
+                            */
+                            // Setting up the style for the stroke
+                            c.strokeStyle = "#FFA040";
+                            c.lineWidth = 3;
 
-							// Define the finger we are looking at
-							var finger = hand.fingers[j];
-							row.push(finger.tipPosition, finger.length);
-							// and get its position in Canvas
-							var fingerPos = leapToScene(finger.tipPosition, frame);
-							/*
-							First Draw the Connection
-							*/
-							// Setting up the style for the stroke
-							c.strokeStyle = "#FFA040";
-							c.lineWidth = 3;
+                            // Drawing the path
+                            c.beginPath();
 
-							// Drawing the path
-							c.beginPath();
+                            // Move to the hand position
+                            c.moveTo(handPos[0], handPos[1]);
 
-							// Move to the hand position
-							c.moveTo(handPos[0], handPos[1]);
+                            // Draw a line to the finger position
+                            c.lineTo(fingerPos[0], fingerPos[1]);
 
-							// Draw a line to the finger position
-							c.lineTo(fingerPos[0], fingerPos[1]);
+                            c.closePath();
+                            c.stroke();
+                            /*
+                            Second Draw the Finger
+                            */
+                            // Setting up the style for the stroke
+                            c.strokeStyle = "#39AECF";
+                            c.lineWidth = 5;
 
-							c.closePath();
-							c.stroke();
-							/*
-							Second Draw the Finger
-							*/
-							// Setting up the style for the stroke
-							c.strokeStyle = "#39AECF";
-							c.lineWidth = 5;
+                            // Creating the path for the finger circle
+                            c.beginPath();
 
-							// Creating the path for the finger circle
-							c.beginPath();
+                            // Draw a full circle of radius 6 at the finger position
+                            c.arc(fingerPos[0], fingerPos[1], 20, 0, Math.PI * 2);
 
-							// Draw a full circle of radius 6 at the finger position
-							c.arc(fingerPos[0], fingerPos[1], 20, 0, Math.PI * 2);
+                            c.closePath();
+                            c.stroke();
+                        }
+                        /*
+                        Third draw the hand
+                        */
+                        // Setting up the style for the fill
+                        c.fillStyle = "#FF5A40";
 
-							c.closePath();
-							c.stroke();
-						}
-						/*
-						Third draw the hand
-						*/
-						// Setting up the style for the fill
-						c.fillStyle = "#FF5A40";
+                        // Creating the path for the hand circle
+                        c.beginPath();
 
-						// Creating the path for the hand circle
-						c.beginPath();
+                        // Draw a full circle of radius 10 at the hand position
+                        c.arc(handPos[0], handPos[1], 40, 0, Math.PI * 2);
 
-						// Draw a full circle of radius 10 at the hand position
-						c.arc(handPos[0], handPos[1], 40, 0, Math.PI * 2);
+                        c.closePath();
+                        c.fill();
 
-						c.closePath();
-						c.fill();
+                        buffer.push(row);
 
-						buffer.push(row);
+                        if (currentTimestamp >= collectionTime.value)
+                            controller.disconnect();
 
-						if (currentTimestamp >= collectionTime.value)
-							controller.disconnect();
+                        if (buffer.length == bufferSize)
+                            flushBuffer();
+                    }
+                }
+            }
 
-						if (buffer.length == bufferSize)
-							flushBuffer();
-					}
-				}
-			}
 
-			controller.on('frame', onFrame);
+            controller.on('frame', onFrame);
 
-			function connect() {
-				if (collectionTime.value > 0) {
-					controller.connect();
-					// Open Serial
-					var result = externalSync(1, true);
-					console.log(result);
-                    // Send High (pulse = 5v)    
-					var result = externalSync(3, true);
-					console.log(result);
-				} else
-					window.alert("Fill the fields appropriately, before try to start the collection.");
-			}
+            function connect() {
+                if (collectionTime.value > 0) {
+                    controller.connect();
+                    // Windows only feature
+                    if (OSName == "Windows") {            
+	                    // Open Serial
+	                    var result = externalSync(1, true);
+	                    //console.log(result);
+	                    // Send High (pulse = 5v)
+	                    var result = externalSync(3, true);
+	                    //console.log(result);
+                    }
+                } else
+                    window.alert("Fill the fields appropriately, before try to start the collection.");
+            }
 
-			// Get frames rolling by connecting the controller
-			controller.on('connect', function(evt) {				
-				collectionTime.disabled = true;
-				disconnectButton.disabled = false;
-				connectButton.disabled = true;
-				leapStatus.innerHTML = 'Status: Connected';
-			});
+            // Get frames rolling by connecting the controller
+            controller.on('connect', function(evt) {
+                collectionTime.disabled = true;
+                disconnectButton.disabled = false;
+                connectButton.disabled = true;
+                leapStatus.innerHTML = 'Status: Connected';
+            });
 
-			controller.on('disconnect', function(evt) {				
-				flushBuffer();
-				// Send Low
-				var result = externalSync(4, true);
-				console.log(result);
-                // Close Serial
-				var result = externalSync(2, true);
-				console.log(result);
-				disconnectButton.disabled = true;
-				//connectButton.disabled = false;
-				window.alert("Data saved, update the page if you wish to do another collect.");
-				leapStatus.innerHTML = 'Status: Disconnected';
-			});
+            controller.on('disconnect', function(evt) {
+                flushBuffer();
+                //Windows only feature
+                if (OSName == "Windows") { 
+	                // Send Low
+	                var result = externalSync(4, true);
+	                //console.log(result);
+	                // Close Serial
+	                var result = externalSync(2, true);
+	                //console.log(result);
+                }
+                disconnectButton.disabled = true;
+                //connectButton.disabled = false;
+                window.alert("Data saved, update the page if you wish to do another collect.");
+                leapStatus.innerHTML = 'Status: Disconnected';
+            });
 
-			controller.on('deviceAttached', function(evt) {
-				console.log("Device attached event");
-			});
+            controller.on('deviceAttached', function(evt) {
+                console.log("Device attached event");
+            });
 
-			controller.on('deviceRemoved', function(evt) {
-				console.log("Device removed event");
-			});
+            controller.on('deviceRemoved', function(evt) {
+                console.log("Device removed event");
+            });
 
-			controller.on('deviceStopped', function(evt) {
-				console.log("Device stopped streaming event");
-			});
+            controller.on('deviceStopped', function(evt) {
+                console.log("Device stopped streaming event");
+            });
 
-			controller.on('deviceStreaming', function(evt) {
-				console.log("Device started streaming event");
-			});
+            controller.on('deviceStreaming', function(evt) {
+                console.log("Device started streaming event");
+            });
 
-			controller.on('protocol', function(protocol) {
-				console.log("Protocol event: " + protocol.version);
-			});
+            controller.on('protocol', function(protocol) {
+                console.log("Protocol event: " + protocol.version);
+            });
 
-			controller.on('streamingStarted', function(evt) {
-				console.log("Service/daemon started streaming event");
-			});
+            controller.on('streamingStarted', function(evt) {
+                console.log("Service/daemon started streaming event");
+            });
 
-			controller.on('streamingStopped', function(evt) {
-				console.log("Service/daemon stopped streaming event");
-			});
+            controller.on('streamingStopped', function(evt) {
+                console.log("Service/daemon stopped streaming event");
+            });
 
-			function initHandChart() {
+            function initHandChart() {
 
-				handChart = new CanvasJS.Chart("handChartContainer", {
-					zoomEnabled : true,
-					title : {
-						text : "Palm Velocity",
-						//fontSize : "19",
-					},
-					data : [{
-						type : "line",
-						color : "#FF5A40",
-						name : "Palm velocity (norm)",
-						showInLegend : true,
-						dataPoints : dps,
-					}],
-					axisX : {
-						title : "seconds",
-						//interval: framePause/1000,
-						intervalType : "second",
-						//suffix: " s",
-						gridThickness : 1,
-					},
-					axisY : {
-						title : "millimeters",
-						minimum : 0,
-						maximum : 300,
-						//suffix: " mm",
-					},
-					toolTip : {
-						enabled : false,
-					},
-					// legend : {
-					// fontSize : 14,
-					// }
-				});
-			}
+                handChart = new CanvasJS.Chart("handChartContainer", {
+                    zoomEnabled : true,
+                    title : {
+                        text : "Palm Velocity",
+                        //fontSize : "19",
+                    },
+                    data : [{
+                        type : "line",
+                        color : "#FF5A40",
+                        name : "Palm velocity (norm)",
+                        showInLegend : true,
+                        dataPoints : dps,
+                    }],
+                    axisX : {
+                        title : "seconds",
+                        //interval: framePause/1000,
+                        intervalType : "second",
+                        //suffix: " s",
+                        gridThickness : 1,
+                    },
+                    axisY : {
+                        title : "millimeters",
+                        minimum : 0,
+                        maximum : 300,
+                        //suffix: " mm",
+                    },
+                    toolTip : {
+                        enabled : false,
+                    },
+                    // legend : {
+                    // fontSize : 14,
+                    // }
+                });
+            }
 
-			function updateHandChart(hand) {
-				dps.push({
-					x : currentTimestamp,
-					y : calc3DVectorNorm(hand.palmVelocity)
-				});
-				if (dps.length > dataLength) {
-					dps.shift();
-				}
-				handChart.render();
-			}
+            function updateHandChart(hand) {
+                dps.push({
+                    x : currentTimestamp,
+                    y : calc3DVectorNorm(hand.palmVelocity)
+                });
+                if (dps.length > dataLength) {
+                    dps.shift();
+                }
+                handChart.render();
+            }
 
-        </script>
-    </body>
+		</script>
+	</body>
 </html>
