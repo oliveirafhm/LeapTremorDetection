@@ -2,10 +2,10 @@
   "name": "Tremor + Leap Motion",
   "description": "Hand tremor data collection using Leap Motion",
   "main": "tremor.html",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "keywords": ["hand tremor", "leap motion"],
   "window": {
-    "title": "Hand tremor data collection using Leap Motion",
+    "title": "Hand tremor data collection using Leap Motion (Fábio Henrique - oliveirafhm@gmail.com)",
     "toolbar": true,
     "width": 900,
     "height": 750
