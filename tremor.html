@@ -5,7 +5,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>Tremor data collection using Leap Motion (by Fábio Henrique and Adriano Andrade)</title>
+		<title>Hand tremor data collection using Leap Motion by Fábio Henrique (oliveirafhm@gmail.com) and Adriano Andrade</title>
 		<meta name="author" content="Fábio Henrique M. Oliveira">
 		<link rel="stylesheet" type="text/css" href="tremor.css">
 		<script type="text/javascript" src="leap-0.6.4.min.js"></script>
@@ -117,17 +117,6 @@
             //Library to work with files
             var fs = require('fs');
 
-            // // To detect the operating system on the client machine
-            // var OSName = "Unknown OS";
-            // if (navigator.appVersion.indexOf("Win") != -1)
-                // OSName = "Windows";
-            // if (navigator.appVersion.indexOf("Mac") != -1)
-                // OSName = "MacOS";
-            // if (navigator.appVersion.indexOf("X11") != -1)
-                // OSName = "UNIX";
-            // if (navigator.appVersion.indexOf("Linux") != -1)
-                // OSName = "Linux";
-
             var directoryPath;
 
             // Set special features to detected OS
@@ -237,16 +226,8 @@
                         // for drawing the connections
                         var handPos = leapToScene(hand.palmPosition, frame);
 
-                        // If we have minus of 5 fingers, we need to complete to keep an uniform database
-                        // if (hand.fingers.length < 5) {
-                        // var i = 5 - hand.fingers.length;
-                        // for (var j = 0; j < i; j++) {
-                        // row.push([0, 0, 0], 0);
-                        // }
-                        // }
-
                         // Loop through all the fingers of the hand we are on
-                        // for (var j = 0; j < hand.fingers.length; j++) {
+                        // Now, we always have five fingers
                         for (var j = 0; j < 5; j++) {
                             // Define the finger we are looking at
                             //var finger = hand.fingers[j];
