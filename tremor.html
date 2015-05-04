@@ -315,7 +315,6 @@
                 }
             }
 
-
             controller.on('frame', onFrame);
 
             function connect() {
@@ -325,10 +324,10 @@
                     if (OSName == "Windows") {            
 	                    // Open Serial
 	                    var result = externalSync(1, true);
-	                    //console.log(result);
+	                    console.log(result);
 	                    // Send High (pulse = 5v)
 	                    var result = externalSync(3, true);
-	                    //console.log(result);
+	                    console.log(result);
                     }
                 } else
                     window.alert("Fill the fields appropriately, before try to start the collection.");
@@ -348,10 +347,10 @@
                 if (OSName == "Windows") { 
 	                // Send Low
 	                var result = externalSync(4, true);
-	                //console.log(result);
+	                console.log(result);
 	                // Close Serial
 	                var result = externalSync(2, true);
-	                //console.log(result);
+	                console.log(result);
                 }
                 disconnectButton.disabled = true;
                 //connectButton.disabled = false;
