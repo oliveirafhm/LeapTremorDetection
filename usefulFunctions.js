@@ -415,8 +415,23 @@ if (navigator.appVersion.indexOf("X11") != -1)
 if (navigator.appVersion.indexOf("Linux") != -1)
     OSName = "Linux";
 
+function changeLeapPriority() {
+	if (OSName == "Windows") {
+		var command = 'cmd /c sudo cmd "" cmd /c '+ process.cwd() +'\/ChangeLeapPriority.bat';
+	    require('child_process').exec(command, function() {
+	        console.log('ChangeLeapPriority batch file executed');
+	    });
+	}
+}
+
 //Windows only feature
 if (OSName == "Windows") {
+	//var path = require('path');
+	//var execPath = path.dirname( process.execPath );
+	//console.log(execPath); // Path of node .exe
+	//console.log(process.env.PWD);//Dont work
+	//console.log(process.cwd());// Path of temp folder node app
+	//changeLeapPriority();
     // Library to invoke C# DLL
     var edge = require('edge');
 
