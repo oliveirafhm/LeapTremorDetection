@@ -66,48 +66,61 @@
 
         <script type="text/javascript">
 			// Get the canvas DOM element
-			var canvas = document.getElementById('canvas');
-
-			// Making sure we have the proper aspect ratio for our canvas
-			canvas.width = canvas.clientWidth;
-			canvas.height = canvas.clientHeight;
-
-			// Create the context we will use for drawing
-			var c = canvas.getContext('2d');
-
-			// Save the canvas width and canvas height
-			// as easily accesible variables
-			var width = canvas.width;
-			var height = canvas.height;
-
-			// number of dataPoints visible at any point in the chart
-			var dataLength = 600;
-			// dataPoints
-			var dps = [];
-
-			// Charts
-			var handChart;
-
-			// Vars to control the time (to use in the charts)
-			var firstTimestamp = 0;
-			var currentTimestamp = 0;
-			var lastTimestamp = 0;
-
-			var startTime = 0;
-			//var currentTime = 0;
-
-			// My frame id
-			var frameId = 0;
-
-			// Creates our Leap Controller
-			var controller = new Leap.Controller({
-				enableGestures : false,
-				background : true,
-				optimizeHMD : false,
-				frameEventName : 'animationFrame',
-				loopWhileDisconnected : false
-			});
-
+            var canvas = document.getElementById('canvas');
+            // Making sure we have the proper aspect ratio for our canvas
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            // Create the context we will use for drawing
+            var c = canvas.getContext('2d');
+            // Save the canvas width and canvas height
+            // as easily accesible variables
+            var width = canvas.width;
+            var height = canvas.height;
+            // number of dataPoints visible at any point in the chart
+            var dataLength = 600;
+            // dataPoints
+            var dps = [];
+            // Charts
+            var handChart;
+            // Vars to control the time (to use in the charts)
+            var firstTimestamp = 0;
+            var currentTimestamp = 0;
+            var lastTimestamp = 0;
+            var startTime = 0;                
+            // My frame id
+            var frameId = 0;
+            // Creates our Leap Controller
+            var controller = new Leap.Controller({
+                enableGestures : false,
+                background : true,
+                optimizeHMD : false,
+                frameEventName : 'animationFrame',
+                loopWhileDisconnected : false
+            });
+			function restartVars(){			
+    			// Making sure we have the proper aspect ratio for our canvas
+    			canvas.width = canvas.clientWidth;
+    			canvas.height = canvas.clientHeight;    
+    			// Create the context we will use for drawing
+    			c = canvas.getContext('2d');    
+    			// Save the canvas width and canvas height
+    			// as easily accesible variables
+    			width = canvas.width;
+    			height = canvas.height;    		
+    			// dataPoints
+    			dps = [];    
+    			// Vars to control the time (to use in the charts)
+    			firstTimestamp = 0;
+    			currentTimestamp = 0;
+    			lastTimestamp = 0;
+    			startTime = 0;    			    
+    			// My frame id
+    			frameId = 0;
+    			
+    			fileName = '';
+    			
+    			initHandChart();			
+            }
 			//Buttons var
 			var directoryInput = document.getElementById('inputDirectory');
 			var saveDataButton = document.getElementById("saveDataButton");
@@ -356,8 +369,14 @@
 				}
 				disconnectButton.disabled = true;
 				//connectButton.disabled = false;
-				window.alert("Data saved, update the page if you wish to do another collect.");
-				leapStatus.innerHTML = 'Status: Disconnected';
+				var choice = window.confirm("Data saved, click on OK if you wish to do another collect.");
+				if (choice){
+			         saveDataButton.disabled = false;
+			         //nameField.focus();
+			         restartVars();
+			         leapStatus.innerHTML = 'Status: --';			         
+				}else
+				    leapStatus.innerHTML = 'Status: Disconnected';
 			});
 
 			controller.on('deviceAttached', function(evt) {
