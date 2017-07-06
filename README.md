@@ -23,9 +23,9 @@ Data structure:
  
 ## Requirements ##
 - Leap Motion sensor (tested with  LM-010)
-- Leap Motion software 2.3
+- Leap Motion software 2.3 - https://www.leapmotion.com/setup/desktop/
 
-## Supported Operational Systems ## 
+## Supported Operational Systems ##
 - Windows 7 / 8 / 10 (not tested)
 - MacOSX
 - Linux
