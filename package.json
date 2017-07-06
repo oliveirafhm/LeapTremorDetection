@@ -2,7 +2,7 @@
   "name": "Tremor + Leap Motion",
   "description": "Hand tremor data collection using Leap Motion",
   "main": "tremor.html",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "keywords": ["hand tremor", "leap motion"],
   "window": {
     "title": "Hand tremor data collection using Leap Motion (Fábio Henrique - oliveirafhm@gmail.com)",
@@ -13,7 +13,6 @@
   "contributors":[{
     "name": "Fábio Henrique M. Oliveira",
     "email": "oliveirafhm@gmail.com",
-    "web": "http://oliveirafhm.blogspot.com.br/",
     "name": "Adriano Oliveira Andrade",
     "email": "aoandrade.ufu@gmail.com"
   }]

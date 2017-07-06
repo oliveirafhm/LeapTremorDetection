@@ -82,6 +82,7 @@
             var dps = [];
             // Charts
             var handChart;
+            var renderChartDelay = 100; //Delay in ms
             // Vars to control the time (to use in the charts)
             var firstTimestamp = 0;
             var currentTimestamp = 0;
@@ -90,11 +91,13 @@
             // My frame id
             var frameId = 0;
             // Creates our Leap Controller
+            //var frameEventName = 'animationFrame';
+            var frameEventName = 'deviceFrame';
             var controller = new Leap.Controller({
                 enableGestures : false,
                 background : true,
-                optimizeHMD : false,
-                frameEventName : 'animationFrame',
+                optimizeHMD : false,                
+                frameEventName : frameEventName,
                 loopWhileDisconnected : false
             });
 			function restartVars(){			
@@ -228,6 +231,7 @@
 							startTime = getTime(':');
 
 							appendFile(fs, (directoryPath + fileName), (breakLine + 'Time: ' + startTime + breakLine + 'Data structure (per row):' + breakLine + '[frameNumber], [currentTimestamp(S)], [handId], [handConfidence(0-1)], [handTimeVisible(S)], [handType(L||R)], [handPalmPosition(X)], [handPalmPosition(Y)], [handPalmPosition(Z)], [handPalmVelocity(X)], [handPalmVelocity(Y)], [handPalmVelocity(Z)], [handPitch(R)], [handYaw(R)], [handRoll(R)], [handPalmNormal(X)], [handPalmNormal(Y)], [handPalmNormal(Z)], [handDirection(X)], [handDirection(Y)], [handDirection(Z)], [thumbTipPosition(X)], [thumbTipPosition(Y)], [thumbTipPosition(Z)], [indexTipPosition(X)], [indexTipPosition(Y)], [indexTipPosition(Z)], [middleTipPosition(X)], [middleTipPosition(Y)], [middleTipPosition(Z)], [ringTipPosition(X)], [ringTipPosition(Y)], [ringTipPosition(Z)], [pinkyTipPosition(X)], [pinkyTipPosition(Y)], [pinkyTipPosition(Z)]' + breakLine));
+						    renderHandChart(renderChartDelay);						    
 						} else {
 							currentTimestamp = usToS((frame.timestamp - firstTimestamp));
 
@@ -452,9 +456,13 @@
 				if (dps.length > dataLength) {
 					dps.shift();
 				}
-				handChart.render();
+				//handChart.render();
 			}
-
+            
+            function renderHandChart(delay) {
+                handChart.render();
+                setTimeout(function(){renderHandChart(delay);}, delay);
+            }
         </script>
     </body>
 </html>
