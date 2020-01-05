@@ -10,7 +10,7 @@ Data structure:
 
 [frameNumber], [currentTimestamp(S)], [handId], [handConfidence(0-1)], [handTimeVisible(S)], [handType(L||R)], [handPalmPosition(X)], [handPalmPosition(Y)], [handPalmPosition(Z)], [handPalmVelocity(X)], [handPalmVelocity(Y)], [handPalmVelocity(Z)], [handPitch(R)], [handYaw(R)], [handRoll(R)], [handPalmNormal(X)], [handPalmNormal(Y)], [handPalmNormal(Z)], [handDirection(X)], [handDirection(Y)], [handDirection(Z)], [thumbTipPosition(X)], [thumbTipPosition(Y)], [thumbTipPosition(Z)], [indexTipPosition(X)], [indexTipPosition(Y)], [indexTipPosition(Z)], [middleTipPosition(X)], [middleTipPosition(Y)], [middleTipPosition(Z)], [ringTipPosition(X)], [ringTipPosition(Y)], [ringTipPosition(Z)], [pinkyTipPosition(X)], [pinkyTipPosition(Y)], [pinkyTipPosition(Z)]
 
-![5.PNG](https://bitbucket.org/repo/g7K5AE/images/194230066-5.PNG)
+![5.PNG](https://github.com/oliveirafhm/LeapTremorDetection/blob/master/shared/LTD%20annotated%20screenshots/5.PNG?raw=true)
 
 ## Features ##
 - App written in HTML, CSS and JS.
