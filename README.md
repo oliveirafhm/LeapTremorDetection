@@ -41,9 +41,9 @@ Don't use proxy while using the software (or disable proxy only for localhost an
 ## Limitations ##
 Up to now, there is no way to get a fixed frame rate. When the deviceFrame version of the app is used it is possible to get around 70 fps (on the follow computer: Core i7 2.9 GHz).
 
-## Authors ##
+## Authors
 * Fábio Henrique M Oliveira (oliveirafhm@gmail.com)
-* Adriano O Andrade (adriano@ufu.br)
+* Adriano O Andrade (adriano@ufu.br) - Advisor
 
 ## List of publications
 1. Oliveira, F. H. M., & Andrade, A. O. (2014). Estratégia para detecção de tremor de punho utilizando o sensor Leap Motion. In Anais do VII Simpósio em Engenharia Biomédica (pp. 143–148). Uberlândia. [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3598592.svg)](https://doi.org/10.5281/zenodo.3598592)
